@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.5.5](https://github.com/ljiulong/boxyy/compare/v0.5.4...v0.5.5) (2026-01-07)
+
+
+### Bug Fixes
+
+* enhance JSON generation in release workflow for better readability and maintainability ([b03aa18](https://github.com/ljiulong/boxyy/commit/b03aa185adbdccc796002d574d705e08ad37cbb3))
+* improve error handling in release workflow for updater artifacts ([66c4f79](https://github.com/ljiulong/boxyy/commit/66c4f797e802ca3f29e89c8f5bc5e08e8fd362b3))
+* streamline JSON handling in release workflow for improved clarity ([4e6bf7c](https://github.com/ljiulong/boxyy/commit/4e6bf7c17cb565a11b9a623e983ff69f5556ed4a))
+
 ## [0.5.4](https://github.com/ljiulong/boxyy/compare/v0.5.3...v0.5.4) (2026-01-07)
 
 
