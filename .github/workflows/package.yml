@@ -4,10 +4,16 @@ on:
   push:
     tags:
       - "v*"
+  release:
+    types: [published]
   workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: package-${{ github.event_name == 'release' && github.event.release.tag_name || github.ref_name }}
+  cancel-in-progress: true
 
 jobs:
   gui-macos:
@@ -36,7 +42,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            TAG_NAME="${{ github.event.release.tag_name }}"
+          elif [[ "${{ github.ref_type }}" == "tag" ]]; then
             TAG_NAME="${{ github.ref_name }}"
           else
             VERSION="$(python3 -c 'import json; print(json.load(open("boxy-gui/tauri.conf.json", "r", encoding="utf-8")).get("version", "0.0.0"))')"
@@ -107,7 +115,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            TAG_NAME="${{ github.event.release.tag_name }}"
+          elif [[ "${{ github.ref_type }}" == "tag" ]]; then
             TAG_NAME="${{ github.ref_name }}"
           else
             VERSION="$(python3 -c 'import json; print(json.load(open("boxy-gui/tauri.conf.json", "r", encoding="utf-8")).get("version", "0.0.0"))')"
@@ -153,7 +163,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            TAG_NAME="${{ github.event.release.tag_name }}"
+          elif [[ "${{ github.ref_type }}" == "tag" ]]; then
             TAG_NAME="${{ github.ref_name }}"
             RELEASE_TAG="${TAG_NAME}"
           else
@@ -176,7 +188,7 @@ jobs:
           ./scripts/ci/verify-artifacts.sh dist
 
       - name: Publish release assets
-        if: github.ref_type == 'tag'
+        if: github.event_name == 'release' || github.ref_type == 'tag'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
