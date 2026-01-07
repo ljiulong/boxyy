@@ -30,6 +30,14 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Resolve version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(python -c 'import json; print(json.load(open("boxy-gui/tauri.conf.json", "r", encoding="utf-8")).get("version", "0.0.0"))')"
+          echo "APP_VERSION=${VERSION}" >> "${GITHUB_ENV}"
+          echo "TAG_NAME=v${VERSION}" >> "${GITHUB_ENV}"
+
       - name: Build Tauri bundle
         shell: bash
         run: |
@@ -42,8 +50,7 @@ jobs:
           set -euo pipefail
           DIST_DIR="dist"
           mkdir -p "${DIST_DIR}"
-          VERSION="$(python -c 'import json; print(json.load(open("boxy-gui/tauri.conf.json", "r", encoding="utf-8")).get("version", "0.0.0"))')"
-          VERSION_TAG="v${VERSION}"
+          VERSION_TAG="${TAG_NAME}"
           if [[ -d "target/release/bundle" ]]; then
             BUNDLE_ROOT="target/release/bundle"
           elif [[ -d "boxy-gui/target/release/bundle" ]]; then
@@ -76,6 +83,17 @@ jobs:
         with:
           name: boxy-macos
           path: dist
+
+      - name: Publish release assets
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          name: ${{ env.TAG_NAME }}
+          generate_release_notes: false
+          files: |
+            dist/Boxy-${{ env.TAG_NAME }}-macos.app.zip
+            dist/Boxy-${{ env.TAG_NAME }}-macos.dmg
 
   verify-download:
     runs-on: macos-latest
