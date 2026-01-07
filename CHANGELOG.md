@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/ljiulong/boxyy/compare/v0.3.1...v0.3.2) (2026-01-07)
+
+
+### Bug Fixes
+
+* update CI workflow to trigger on tag pushes, adjust tag name handling, and ensure proper release asset publishing ([24d96cc](https://github.com/ljiulong/boxyy/commit/24d96cc540b68215b6d0f7ed5bb6de00b586cfff))
+
 ## [0.3.1](https://github.com/ljiulong/boxyy/compare/v0.3.0...v0.3.1) (2026-01-07)
 
 
