@@ -32,7 +32,7 @@ jobs:
           cache-dependency-path: gui-frontend/pnpm-lock.yaml
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@1.74.0
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Build CLI/TUI
         run: cargo build --release -p boxy-cli -p boxy-tui
