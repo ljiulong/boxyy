@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/ljiulong/boxyy/compare/v0.6.0...v0.6.1) (2026-01-07)
+
+
+### Bug Fixes
+
+* **macos:** implement PATH management for macOS to enhance environment setup ([7e042f4](https://github.com/ljiulong/boxyy/commit/7e042f456c6ae110b6978cbb624543dd793fae73))
+
 ## [0.6.0](https://github.com/ljiulong/boxyy/compare/v0.5.6...v0.6.0) (2026-01-07)
 
 
