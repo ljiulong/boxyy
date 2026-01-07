@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.6.3](https://github.com/ljiulong/boxyy/compare/v0.6.2...v0.6.3) (2026-01-07)
+
+
+### Bug Fixes
+
+* release 0.6.2 and update versioning across multiple files ([c754c81](https://github.com/ljiulong/boxyy/commit/c754c815bd1340131f22b7244b60c1c72e71826d))
+* update jsonpath structure in release-please-config for version extraction ([3835c9a](https://github.com/ljiulong/boxyy/commit/3835c9af5e8ebf720ef476854565be06204d2717))
+* update version in Cargo.toml to 0.6.2 and simplify release-please-config structure ([61d594c](https://github.com/ljiulong/boxyy/commit/61d594c743070c0c5f4d7dcf45bf6b5f9770f45c))
+
 ## [0.6.2](https://github.com/ljiulong/boxyy/compare/v0.6.1...v0.6.2) (2026-01-07)
 
 
