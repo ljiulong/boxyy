@@ -7,12 +7,16 @@
         {
           "type": "json",
           "path": "boxy-gui/tauri.conf.json",
-          "jsonpath": "$.version"
+          "jsonpath": {
+            "path": "$.version"
+          }
         },
         {
           "type": "json",
           "path": "gui-frontend/package.json",
-          "jsonpath": "$.version"
+          "jsonpath": {
+            "path": "$.version"
+          }
         },
         {
           "type": "toml",
