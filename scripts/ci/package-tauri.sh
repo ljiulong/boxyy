@@ -13,5 +13,6 @@ fi
 cd "${FRONTEND_DIR}"
 pnpm install --frozen-lockfile
 pnpm build
+export PATH="${FRONTEND_DIR}/node_modules/.bin:${PATH}"
 cd "${ROOT_DIR}/boxy-gui"
-pnpm exec tauri build --bundles app,dmg
+tauri build --bundles app,dmg
