@@ -364,8 +364,8 @@ pub async fn delete_task(
   state: State<'_, AppState>,
 ) -> Result<(), String> {
   let mut store = state.tasks.lock().await;
-  if let Some(handle) = store.handles.get(&task_id) {
-    if !handle.is_finished() {
+  if let Some(job) = store.tasks.iter().find(|job| job.id == task_id) {
+    if job.status == JobStatus::Running {
       return Err("任务运行中，无法删除".to_string());
     }
   }

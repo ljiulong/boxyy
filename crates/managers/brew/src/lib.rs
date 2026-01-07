@@ -336,6 +336,16 @@ impl PackageManager for BrewManager {
         let output = self.exec(&["list", "--versions"]).await?;
         let mut packages = self.parse_list_output_with_versions(&output);
 
+        match self.exec(&["list", "--cask", "--versions"]).await {
+            Ok(cask_output) => {
+                let mut cask_packages = self.parse_list_output_with_versions(&cask_output);
+                packages.append(&mut cask_packages);
+            }
+            Err(err) => {
+                warn!("brew 获取 cask 列表失败: {}", err);
+            }
+        }
+
         match self.fetch_installed_sizes().await {
             Ok(size_map) => {
                 for pkg in packages.iter_mut() {
@@ -362,6 +372,10 @@ impl PackageManager for BrewManager {
 
     async fn get_info(&self, name: &str) -> Result<Package> {
         let output = self.exec(&["info", "--json=v2", name]).await?;
+        if let Ok(pkg) = self.parse_json_info(&output, name) {
+            return Ok(pkg);
+        }
+        let output = self.exec(&["info", "--json=v2", "--cask", name]).await?;
         self.parse_json_info(&output, name)
     }
 
@@ -376,7 +390,9 @@ impl PackageManager for BrewManager {
         info!("brew install {}", args.join(" "));
 
         let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
-        self.exec(&args_refs).await?;
+        if self.exec(&args_refs).await.is_err() {
+            self.exec(&["install", "--cask", name]).await?;
+        }
         self.cache.invalidate("brew").await?;
 
         Ok(())
@@ -384,7 +400,9 @@ impl PackageManager for BrewManager {
 
     async fn upgrade(&self, name: &str) -> Result<()> {
         info!("brew upgrade {}", name);
-        self.exec(&["upgrade", name]).await?;
+        if self.exec(&["upgrade", name]).await.is_err() {
+            self.exec(&["upgrade", "--cask", name]).await?;
+        }
         self.cache.invalidate("brew").await?;
 
         Ok(())
@@ -400,7 +418,15 @@ impl PackageManager for BrewManager {
         warn!("brew uninstall {} (force: {})", name, force);
 
         let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
-        self.exec(&args_refs).await?;
+        if self.exec(&args_refs).await.is_err() {
+            let mut cask_args = vec!["uninstall".to_string(), "--cask".to_string()];
+            if force {
+                cask_args.push("--force".to_string());
+            }
+            cask_args.push(name.to_string());
+            let cask_refs: Vec<&str> = cask_args.iter().map(|s| s.as_str()).collect();
+            self.exec(&cask_refs).await?;
+        }
         self.cache.invalidate("brew").await?;
 
         Ok(())

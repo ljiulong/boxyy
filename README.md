@@ -111,6 +111,8 @@ macOS 推荐下载方式：Homebrew（避免系统拦截，安装后可直接使
  
 说明：
 - Homebrew 仅适用于 macOS；Linux/Windows 请使用 GitHub Releases 下载对应包。
+- Boxy 只会检测“通过包管理器安装/管理”的应用、包与依赖；手动下载或拖拽安装的应用不会被识别。
+- 当前仍在完善阶段，可能出现扫描不全或识别不完整的情况。
 
 ```bash
 # 订阅本仓库的 tap
@@ -137,6 +139,9 @@ brew install --cask boxy-gui
 4. 解压后运行即可。
 
 ## 常见问题
+
+### 扫描结果不完整
+Boxy 仍在完善阶段，可能出现扫描不全或识别不完整的情况。欢迎提交反馈：<https://github.com/ljiulong/boxyy/issues>
 
 ### macOS 提示“无法打开”或“来自不明开发者”
 可执行以下命令移除隔离属性（不需要重装）：

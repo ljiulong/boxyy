@@ -3,6 +3,7 @@ import { getVersion } from "@tauri-apps/api/app";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { check, type DownloadEvent, type Update } from "@tauri-apps/plugin-updater";
+import { relaunch } from "@tauri-apps/plugin-process";
 import { useTheme } from "./theme";
 import { useManagers } from "./hooks/useManagers";
 import { usePackages } from "./hooks/usePackages";
@@ -878,6 +879,7 @@ export const App: React.FC = () => {
 
   return (
     <div className={`app-root ${sidebarCollapsed ? "app-collapsed" : ""}`}>
+      <div className="titlebar-drag-region" data-tauri-drag-region />
       <aside className="sidebar">
         <div className="sidebar-logo">
           <div className="logo-circle">
@@ -1846,9 +1848,9 @@ const SettingsView: React.FC<{ onOpenLogs: () => void }> = ({ onOpenLogs }) => {
         setUpdateStatus("done");
         setUpdateMessage(t("settings.about.update_ready"));
         try {
-          await getCurrentWindow().close();
+          await relaunch();
         } catch (error) {
-          console.warn("Close window failed:", error);
+          console.warn("Relaunch failed:", error);
         }
       } catch (error) {
         console.error("Install update failed:", error);

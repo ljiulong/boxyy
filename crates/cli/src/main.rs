@@ -19,7 +19,7 @@ const EXIT_ERROR: i32 = 1;
 const EXIT_USAGE: i32 = 2;
 
 #[derive(Parser, Debug)]
-#[command(name = "boxy", version = "0.1.0", about = "macOS 统一包管理器")]
+#[command(name = "boxy", version = env!("CARGO_PKG_VERSION"), about = "macOS 统一包管理器")]
 struct Cli {
     #[arg(short, long, global = true)]
     json: bool,

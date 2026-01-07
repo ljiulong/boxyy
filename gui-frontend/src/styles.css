@@ -51,6 +51,15 @@ body {
   color: var(--fg-main);
 }
 
+.titlebar-drag-region {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--titlebar-height);
+  z-index: 1000;
+}
+
 /* 左侧侧边栏 */
 
 .sidebar {

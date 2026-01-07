@@ -42,6 +42,11 @@ fn setup_terminal() -> Result<Terminal<CrosstermBackend<Stdout>>> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+  if std::env::args().skip(1).any(|arg| arg == "--version" || arg == "-V") {
+    println!("boxy-tui {}", env!("CARGO_PKG_VERSION"));
+    return Ok(());
+  }
+
   let _guard = TerminalGuard;
   let mut terminal = setup_terminal()?;
 
