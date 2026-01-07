@@ -53,6 +53,6 @@
       "icons/icon.ico"
     ],
     "targets": "all",
-    "createUpdaterArtifacts": true
+    "createUpdaterArtifacts": "v1Compatible"
   }
 }
