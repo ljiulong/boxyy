@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.3](https://github.com/ljiulong/boxyy/compare/v0.4.2...v0.4.3) (2026-01-07)
+
+
+### Bug Fixes
+
+* move updater configuration under plugins in tauri.conf.json for better organization ([b7ce8a3](https://github.com/ljiulong/boxyy/commit/b7ce8a3d6d09bd8d912df2701d26119f99486b32))
+
 ## [0.4.2](https://github.com/ljiulong/boxyy/compare/v0.4.1...v0.4.2) (2026-01-07)
 
 
