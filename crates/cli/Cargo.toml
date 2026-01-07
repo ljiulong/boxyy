@@ -1,0 +1,37 @@
+[package]
+name = "boxy-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "boxy"
+path = "src/main.rs"
+
+[lib]
+name = "boxy_cli"
+path = "src/lib.rs"
+
+[dependencies]
+boxy-core = { path = "../core" }
+boxy-cache = { path = "../cache" }
+boxy-error = { path = "../error" }
+boxy-brew = { path = "../managers/brew" }
+boxy-bun = { path = "../managers/bun" }
+boxy-cargo = { path = "../managers/cargo" }
+boxy-mas = { path = "../managers/mas" }
+boxy-npm = { path = "../managers/npm" }
+boxy-pip = { path = "../managers/pip" }
+boxy-pipx = { path = "../managers/pipx" }
+boxy-pnpm = { path = "../managers/pnpm" }
+boxy-uv = { path = "../managers/uv" }
+boxy-yarn = { path = "../managers/yarn" }
+clap.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+colored.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+anyhow.workspace = true

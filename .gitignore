@@ -1,0 +1,38 @@
+# ==== Rust / Cargo 构建产物 ====
+/target/
+
+# ==== Node / 前端依赖 ====
+/node_modules/
+/gui-frontend/node_modules/
+
+# ==== 包管理锁文件（一般建议保留，方便复现环境，因此这里不忽略）====
+# package-lock.json
+# pnpm-lock.yaml
+
+# ==== Tauri / 应用打包产物（如果配置自定义输出目录，可以在这里追加）====
+# 例如：
+/dist/
+/gui-frontend/dist/
+
+# ==== Git 备份目录 ====
+/.git.backup/
+/.git.backup/
+
+# ==== 操作系统 / 编辑器本地文件 ====
+.DS_Store
+Thumbs.db
+
+# VSCode / IDE 配置（如果你不希望提交到仓库）
+.vscode/
+.idea/
+
+# ==== 日志文件 ====
+*.log
+
+# ==== 临时文件 ====
+*.tmp
+*.swp
+*.swo
+
+
+

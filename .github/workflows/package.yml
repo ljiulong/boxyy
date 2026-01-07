@@ -1,0 +1,116 @@
+name: package
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: gui-frontend/pnpm-lock.yaml
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@1.74.0
+
+      - name: Build CLI/TUI
+        run: cargo build --release -p boxy-cli -p boxy-tui
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Build Tauri bundle
+        shell: bash
+        run: |
+          chmod +x scripts/ci/package-tauri.sh
+          ./scripts/ci/package-tauri.sh
+
+      - name: Package CLI/TUI
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${{ github.ref_name }}"
+          if [[ "${{ github.ref_type }}" != "tag" ]]; then
+            VERSION="nightly"
+          fi
+          DIST_DIR="dist"
+          mkdir -p "${DIST_DIR}"
+          ARCHIVE_PREFIX="boxy-cli-tui-v${VERSION}-${{ runner.os }}"
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            cp target/release/boxy.exe "${DIST_DIR}/boxy-cli-${{ runner.os }}.exe"
+            cp target/release/boxy-tui.exe "${DIST_DIR}/boxy-tui-${{ runner.os }}.exe"
+            (cd "${DIST_DIR}" && 7z a "${ARCHIVE_PREFIX}.zip" "boxy-cli-${{ runner.os }}.exe" "boxy-tui-${{ runner.os }}.exe")
+          else
+            cp target/release/boxy "${DIST_DIR}/boxy-cli-${{ runner.os }}"
+            cp target/release/boxy-tui "${DIST_DIR}/boxy-tui-${{ runner.os }}"
+            chmod +x "${DIST_DIR}/boxy-cli-${{ runner.os }}" "${DIST_DIR}/boxy-tui-${{ runner.os }}"
+            tar -czf "${DIST_DIR}/${ARCHIVE_PREFIX}.tar.gz" -C "${DIST_DIR}" "boxy-cli-${{ runner.os }}" "boxy-tui-${{ runner.os }}"
+          fi
+
+      - name: Upload bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: boxy-${{ runner.os }}
+          path: |
+            target/release/bundle
+            dist/boxy-cli-tui-v${{ github.ref_name }}-${{ runner.os }}.*
+            dist/boxy-cli-tui-vnightly-${{ runner.os }}.*
+
+      - name: Publish release assets
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nightly
+          name: Nightly
+          prerelease: true
+          target_commitish: ${{ github.sha }}
+          files: |
+            target/release/bundle/**/*
+            dist/boxy-cli-tui-v${{ github.ref_name }}-${{ runner.os }}.*
+            dist/boxy-cli-tui-vnightly-${{ runner.os }}.*
+
+  verify-download:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Verify artifacts are downloadable
+        shell: bash
+        run: |
+          chmod +x scripts/ci/verify-artifacts.sh
+          ./scripts/ci/verify-artifacts.sh dist

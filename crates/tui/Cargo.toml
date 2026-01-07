@@ -1,0 +1,30 @@
+[package]
+name = "boxy-tui"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+boxy-core.workspace = true
+boxy-cache.workspace = true
+boxy-error.workspace = true
+boxy-brew = { path = "../managers/brew" }
+boxy-bun = { path = "../managers/bun" }
+boxy-cargo = { path = "../managers/cargo" }
+boxy-mas = { path = "../managers/mas" }
+boxy-npm = { path = "../managers/npm" }
+boxy-pip = { path = "../managers/pip" }
+boxy-pipx = { path = "../managers/pipx" }
+boxy-pnpm = { path = "../managers/pnpm" }
+boxy-uv = { path = "../managers/uv" }
+boxy-yarn = { path = "../managers/yarn" }
+anyhow.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+chrono.workspace = true
+ratatui.workspace = true
+crossterm.workspace = true
+
+[dev-dependencies]
