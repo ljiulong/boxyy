@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
 import { listen } from "@tauri-apps/api/event";
-import { exit, relaunch } from "@tauri-apps/api/process";
-import { check, onUpdaterEvent } from "@tauri-apps/plugin-updater";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import { check, type DownloadEvent, type Update } from "@tauri-apps/plugin-updater";
 import { useTheme } from "./theme";
 import { useManagers } from "./hooks/useManagers";
 import { usePackages } from "./hooks/usePackages";
@@ -1722,12 +1722,7 @@ type UpdateStatus =
   | "done"
   | "error";
 
-type UpdateHandle = {
-  available?: boolean;
-  version?: string;
-  body?: string;
-  downloadAndInstall?: (onProgress?: (event: unknown) => void) => Promise<void>;
-};
+type UpdateHandle = Update | null;
 
 const SettingsView: React.FC<{ onOpenLogs: () => void }> = ({ onOpenLogs }) => {
   const { theme, setTheme } = useTheme();
@@ -1735,52 +1730,38 @@ const SettingsView: React.FC<{ onOpenLogs: () => void }> = ({ onOpenLogs }) => {
   const [appVersion, setAppVersion] = useState<string>("");
   const gitUrl = "https://github.com/ljiulong/boxyy";
   const releasesUrl = "https://github.com/ljiulong/boxyy/releases/latest";
-  const updateRef = useRef<UpdateHandle | null>(null);
+  const updateRef = useRef<UpdateHandle>(null);
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>("idle");
   const [updateProgress, setUpdateProgress] = useState<number | null>(null);
   const [updateVersion, setUpdateVersion] = useState<string | null>(null);
   const [updateMessage, setUpdateMessage] = useState<string | null>(null);
+  const totalBytesRef = useRef<number | null>(null);
+  const downloadedBytesRef = useRef(0);
 
-  const handleUpdaterEvent = useCallback((event: unknown) => {
-    const payload = event as Record<string, unknown> | null;
-    const statusRaw = payload?.status ?? payload?.event ?? "";
-    const status = String(statusRaw).toLowerCase();
-    const downloaded =
-      typeof payload?.downloaded === "number"
-        ? payload.downloaded
-        : typeof (payload as { bytesDownloaded?: number })?.bytesDownloaded === "number"
-          ? (payload as { bytesDownloaded: number }).bytesDownloaded
-          : typeof (payload as { progress?: { downloaded?: number } })?.progress?.downloaded ===
-              "number"
-            ? (payload as { progress: { downloaded: number } }).progress.downloaded
-            : undefined;
-    const total =
-      typeof payload?.contentLength === "number"
-        ? payload.contentLength
-        : typeof (payload as { total?: number })?.total === "number"
-          ? (payload as { total: number }).total
-          : typeof (payload as { totalBytes?: number })?.totalBytes === "number"
-            ? (payload as { totalBytes: number }).totalBytes
-            : typeof (payload as { progress?: { total?: number } })?.progress?.total === "number"
-              ? (payload as { progress: { total: number } }).progress.total
-              : undefined;
-
-    if (status.includes("download")) {
+  const handleUpdaterEvent = useCallback((event: DownloadEvent) => {
+    if (event.event === "Started") {
+      totalBytesRef.current = event.data.contentLength ?? null;
+      downloadedBytesRef.current = 0;
       setUpdateStatus("downloading");
-    } else if (status.includes("install")) {
-      setUpdateStatus("installing");
-    } else if (status.includes("done") || status.includes("success")) {
-      setUpdateStatus("done");
-    } else if (status.includes("error")) {
-      setUpdateStatus("error");
-      setUpdateMessage(t("settings.about.update_failed"));
+      setUpdateProgress(0);
+      return;
     }
-
-    if (typeof downloaded === "number" && typeof total === "number" && total > 0) {
-      const next = Math.min(100, Math.round((downloaded / total) * 100));
-      setUpdateProgress(next);
+    if (event.event === "Progress") {
+      downloadedBytesRef.current += event.data.chunkLength;
+      const total = totalBytesRef.current;
+      if (typeof total === "number" && total > 0) {
+        const next = Math.min(
+          100,
+          Math.round((downloadedBytesRef.current / total) * 100)
+        );
+        setUpdateProgress(next);
+      }
+      return;
     }
-  }, [t]);
+    if (event.event === "Finished") {
+      setUpdateProgress(100);
+    }
+  }, []);
 
   const checkForUpdate = useCallback(
     async (silent = false) => {
@@ -1793,8 +1774,8 @@ const SettingsView: React.FC<{ onOpenLogs: () => void }> = ({ onOpenLogs }) => {
         setUpdateMessage(null);
       }
       try {
-        const update = (await check()) as UpdateHandle | null;
-        if (update?.available) {
+        const update = (await check()) as UpdateHandle;
+        if (update) {
           updateRef.current = update;
           setUpdateVersion(update.version ?? null);
           setUpdateStatus("available");
@@ -1827,24 +1808,6 @@ const SettingsView: React.FC<{ onOpenLogs: () => void }> = ({ onOpenLogs }) => {
       });
 
     checkForUpdate(true);
-    let unlisten: (() => void) | null = null;
-    const maybeUnlisten = onUpdaterEvent(handleUpdaterEvent);
-    if (typeof (maybeUnlisten as Promise<() => void>)?.then === "function") {
-      (maybeUnlisten as Promise<() => void>)
-        .then((cleanup) => {
-          unlisten = cleanup;
-        })
-        .catch((error) => {
-          console.warn("Updater event listener setup failed:", error);
-        });
-    } else if (typeof maybeUnlisten === "function") {
-      unlisten = maybeUnlisten;
-    }
-    return () => {
-      if (unlisten) {
-        unlisten();
-      }
-    };
   }, []);
 
   const onOpenGit = async (event: React.MouseEvent<HTMLAnchorElement>) => {
@@ -1873,19 +1836,19 @@ const SettingsView: React.FC<{ onOpenLogs: () => void }> = ({ onOpenLogs }) => {
       setUpdateProgress(0);
       setUpdateMessage(null);
       try {
-        const update = updateRef.current ?? ((await check()) as UpdateHandle | null);
-        if (!update?.available || typeof update.downloadAndInstall !== "function") {
+        const update = updateRef.current ?? ((await check()) as UpdateHandle);
+        if (!update || typeof update.downloadAndInstall !== "function") {
           setUpdateStatus("idle");
           return;
         }
+        setUpdateVersion(update.version ?? updateVersion);
         await update.downloadAndInstall(handleUpdaterEvent);
         setUpdateStatus("done");
         setUpdateMessage(t("settings.about.update_ready"));
         try {
-          await relaunch();
+          await getCurrentWindow().close();
         } catch (error) {
-          console.warn("Relaunch failed:", error);
-          await exit(0);
+          console.warn("Close window failed:", error);
         }
       } catch (error) {
         console.error("Install update failed:", error);
