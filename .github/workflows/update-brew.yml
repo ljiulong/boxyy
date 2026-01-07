@@ -1,0 +1,65 @@
+name: update-brew
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  update-formula:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Update Homebrew Formula/Cask
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TAG="${{ github.event.release.tag_name }}"
+          VERSION="${TAG#v}"
+
+          CLI_TUI_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/boxy-cli-tui-${TAG}-macOS.tar.gz"
+          GUI_DMG_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/Boxy-${TAG}-macos.dmg"
+
+          CLI_TUI_SHA=$(curl -fL -s "${CLI_TUI_URL}" | shasum -a 256 | awk '{print $1}')
+          GUI_DMG_SHA=$(curl -fL -s "${GUI_DMG_URL}" | shasum -a 256 | awk '{print $1}')
+
+          export VERSION CLI_TUI_SHA GUI_DMG_SHA
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          version = os.environ["VERSION"]
+          cli_sha = os.environ["CLI_TUI_SHA"]
+          gui_sha = os.environ["GUI_DMG_SHA"]
+
+          formula = Path("Formula/boxy.rb")
+          text = formula.read_text()
+          text = __import__("re").sub(r'version "[^"]+"', f'version "{version}"', text)
+          text = __import__("re").sub(r'sha256 "[^"]+"', f'sha256 "{cli_sha}"', text)
+          formula.write_text(text)
+
+          cask = Path("Casks/boxy-gui.rb")
+          text = cask.read_text()
+          text = __import__("re").sub(r'version "[^"]+"', f'version "{version}"', text)
+          text = __import__("re").sub(r'sha256 "[^"]+"', f'sha256 "{gui_sha}"', text)
+          cask.write_text(text)
+          PY
+
+      - name: Commit and push
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/boxy.rb Casks/boxy-gui.rb
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          TAG="${{ github.event.release.tag_name }}"
+          git commit -m "chore(brew): update formula for ${TAG}"
+          git push
