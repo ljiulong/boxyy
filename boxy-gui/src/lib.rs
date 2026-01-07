@@ -1,6 +1,10 @@
 use boxy_cache::Cache;
 use boxy_core::ManagerExecutor;
 use std::collections::HashMap;
+#[cfg(target_os = "macos")]
+use std::collections::HashSet;
+#[cfg(target_os = "macos")]
+use std::env;
 use std::sync::Arc;
 use tauri::Wry;
 use tokio::sync::Mutex;
@@ -27,6 +31,7 @@ pub fn build() -> tauri::Builder<Wry> {
   if let Err(err) = logging::init_logging() {
     eprintln!("初始化日志失败: {}", err);
   }
+  ensure_macos_path();
 
   tauri::Builder::default()
     .plugin(tauri_plugin_shell::init())
@@ -56,4 +61,41 @@ pub fn build() -> tauri::Builder<Wry> {
       commands::append_frontend_log,
       commands::get_app_log_path,
     ])
+}
+
+fn ensure_macos_path() {
+  #[cfg(target_os = "macos")]
+  {
+    let current = env::var("PATH").unwrap_or_default();
+    let mut seen: HashSet<String> = current
+      .split(':')
+      .filter(|entry| !entry.is_empty())
+      .map(|entry| entry.to_string())
+      .collect();
+
+    let mut parts: Vec<String> = current
+      .split(':')
+      .filter(|entry| !entry.is_empty())
+      .map(|entry| entry.to_string())
+      .collect();
+
+    for candidate in [
+      "/opt/homebrew/bin",
+      "/opt/homebrew/sbin",
+      "/usr/local/bin",
+      "/usr/local/sbin",
+      "/usr/bin",
+      "/bin",
+      "/usr/sbin",
+      "/sbin",
+    ] {
+      if seen.insert(candidate.to_string()) {
+        parts.push(candidate.to_string());
+      }
+    }
+
+    if !parts.is_empty() {
+      env::set_var("PATH", parts.join(":"));
+    }
+  }
 }

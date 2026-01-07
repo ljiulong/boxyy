@@ -1,0 +1,13 @@
+{
+  "release-type": "simple",
+  "include-v-in-tag": true,
+  "packages": {
+    ".": {
+      "extra-files": [
+        "boxy-gui/tauri.conf.json",
+        "gui-frontend/package.json",
+        "Cargo.toml"
+      ]
+    }
+  }
+}
