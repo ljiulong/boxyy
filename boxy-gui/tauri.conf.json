@@ -52,6 +52,7 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "targets": "all"
+    "targets": "all",
+    "createUpdaterArtifacts": true
   }
 }
