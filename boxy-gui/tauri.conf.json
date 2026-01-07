@@ -1,6 +1,6 @@
 {
   "productName": "Boxy",
-  "version": "0.4.4",
+  "version": "0.5.0",
   "identifier": "com.boxy",
   "build": {
     "devUrl": "http://localhost:5173",
