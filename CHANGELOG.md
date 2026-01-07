@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/ljiulong/boxyy/compare/v0.3.5...v0.4.0) (2026-01-07)
+
+
+### Features
+
+* integrate tauri-plugin-updater for automatic updates; enhance README with project structure; update CI workflow to include latest.json and signature files; improve macOS path resolution logic ([987a9e1](https://github.com/ljiulong/boxyy/commit/987a9e115f56746fdfe50f008cfae411e4a936d8))
+
 ## [0.3.5](https://github.com/ljiulong/boxyy/compare/v0.3.4...v0.3.5) (2026-01-07)
 
 
