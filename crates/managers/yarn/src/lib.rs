@@ -4,8 +4,6 @@ use boxy_core::{
     manager::PackageManager,
     package::{Capability, Package},
 };
-use boxy_core::retry::retry_with_backoff;
-use boxy_core::{DEFAULT_MAX_ATTEMPTS, DEFAULT_RETRY_BASE_DELAY};
 use boxy_error::{BoxyError, Result};
 use serde::Deserialize;
 use std::{
@@ -61,13 +59,12 @@ impl YarnManager {
 
         debug!("执行 yarn 命令: {}", cmd_args.join(" "));
 
-        retry_with_backoff(DEFAULT_MAX_ATTEMPTS, DEFAULT_RETRY_BASE_DELAY, || async {
-            let mut cmd = Command::new("yarn");
-            cmd.args(&cmd_args);
-            if let Some(workdir) = &self.workdir {
-                cmd.current_dir(workdir);
-            }
-            let output = timeout(COMMAND_TIMEOUT, cmd.output())
+        let mut cmd = Command::new("yarn");
+        cmd.args(&cmd_args);
+        if let Some(workdir) = &self.workdir {
+            cmd.current_dir(workdir);
+        }
+        let output = timeout(COMMAND_TIMEOUT, cmd.output())
             .await
             .map_err(|_| BoxyError::CommandTimeout)?
             .map_err(|_| BoxyError::CommandFailed {
@@ -76,17 +73,15 @@ impl YarnManager {
                 exit_code: -1,
             })?;
 
-            if output.status.success() {
-                Ok(String::from_utf8_lossy(&output.stdout).to_string())
-            } else {
-                Err(BoxyError::CommandFailed {
-                    manager: "yarn".to_string(),
-                    command: cmd_args.join(" "),
-                    exit_code: output.status.code().unwrap_or(-1),
-                })
-            }
-        })
-        .await
+        if output.status.success() {
+            Ok(String::from_utf8_lossy(&output.stdout).to_string())
+        } else {
+            Err(BoxyError::CommandFailed {
+                manager: "yarn".to_string(),
+                command: cmd_args.join(" "),
+                exit_code: output.status.code().unwrap_or(-1),
+            })
+        }
     }
 
     async fn resolve_root(&self) -> Option<PathBuf> {
@@ -348,8 +343,11 @@ impl PackageManager for YarnManager {
         Ok(package)
     }
 
-    async fn install(&self, name: &str, version: Option<&str>) -> Result<()> {
+    async fn install(&self, name: &str, version: Option<&str>, force: bool) -> Result<()> {
         let mut args: Vec<String> = vec!["add".to_string()];
+        if force {
+            args.push("--force".to_string());
+        }
         let target = match version {
             Some(v) => format!("{}@{}", name, v),
             None => name.to_string(),

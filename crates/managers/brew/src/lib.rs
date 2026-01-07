@@ -4,8 +4,6 @@ use boxy_core::{
     manager::PackageManager,
     package::{Capability, Package},
 };
-use boxy_core::retry::retry_with_backoff;
-use boxy_core::{DEFAULT_MAX_ATTEMPTS, DEFAULT_RETRY_BASE_DELAY};
 use boxy_error::{BoxyError, Result};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -28,27 +26,24 @@ impl BrewManager {
     async fn exec(&self, args: &[&str]) -> Result<String> {
         debug!("执行 brew 命令: {}", args.join(" "));
 
-        retry_with_backoff(DEFAULT_MAX_ATTEMPTS, DEFAULT_RETRY_BASE_DELAY, || async {
-            let output = timeout(COMMAND_TIMEOUT, Command::new("brew").args(args).output())
-                .await
-                .map_err(|_| BoxyError::CommandTimeout)?
-                .map_err(|_| BoxyError::CommandFailed {
-                    manager: "brew".to_string(),
-                    command: args.join(" "),
-                    exit_code: -1,
-                })?;
+        let output = timeout(COMMAND_TIMEOUT, Command::new("brew").args(args).output())
+            .await
+            .map_err(|_| BoxyError::CommandTimeout)?
+            .map_err(|_| BoxyError::CommandFailed {
+                manager: "brew".to_string(),
+                command: args.join(" "),
+                exit_code: -1,
+            })?;
 
-            if output.status.success() {
-                Ok(String::from_utf8_lossy(&output.stdout).to_string())
-            } else {
-                Err(BoxyError::CommandFailed {
-                    manager: "brew".to_string(),
-                    command: args.join(" "),
-                    exit_code: output.status.code().unwrap_or(-1),
-                })
-            }
-        })
-        .await
+        if output.status.success() {
+            Ok(String::from_utf8_lossy(&output.stdout).to_string())
+        } else {
+            Err(BoxyError::CommandFailed {
+                manager: "brew".to_string(),
+                command: args.join(" "),
+                exit_code: output.status.code().unwrap_or(-1),
+            })
+        }
     }
 
     fn parse_list_output_with_versions(&self, output: &str) -> Vec<Package> {
@@ -379,8 +374,11 @@ impl PackageManager for BrewManager {
         self.parse_json_info(&output, name)
     }
 
-    async fn install(&self, name: &str, version: Option<&str>) -> Result<()> {
+    async fn install(&self, name: &str, version: Option<&str>, force: bool) -> Result<()> {
         let mut args = vec!["install".to_string()];
+        if force {
+            args.push("--force".to_string());
+        }
         if let Some(v) = version {
             args.push(format!("{}@{}", name, v));
         } else {
@@ -390,8 +388,23 @@ impl PackageManager for BrewManager {
         info!("brew install {}", args.join(" "));
 
         let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
-        if self.exec(&args_refs).await.is_err() {
-            self.exec(&["install", "--cask", name]).await?;
+        match self.exec(&args_refs).await {
+            Ok(_) => {}
+            Err(formula_err) => {
+                // formula 安装失败，尝试 cask
+                let mut cask_args = vec!["install", "--cask"];
+                if force {
+                    cask_args.push("--force");
+                }
+                cask_args.push(name);
+                self.exec(&cask_args).await.map_err(|cask_err| {
+                    BoxyError::CommandFailed {
+                        manager: "brew".to_string(),
+                        command: format!("install {} (formula: {}, cask: {})", name, formula_err, cask_err),
+                        exit_code: -1,
+                    }
+                })?;
+            }
         }
         self.cache.invalidate("brew").await?;
 
@@ -400,8 +413,17 @@ impl PackageManager for BrewManager {
 
     async fn upgrade(&self, name: &str) -> Result<()> {
         info!("brew upgrade {}", name);
-        if self.exec(&["upgrade", name]).await.is_err() {
-            self.exec(&["upgrade", "--cask", name]).await?;
+        match self.exec(&["upgrade", name]).await {
+            Ok(_) => {}
+            Err(formula_err) => {
+                self.exec(&["upgrade", "--cask", name]).await.map_err(|cask_err| {
+                    BoxyError::CommandFailed {
+                        manager: "brew".to_string(),
+                        command: format!("upgrade {} (formula: {}, cask: {})", name, formula_err, cask_err),
+                        exit_code: -1,
+                    }
+                })?;
+            }
         }
         self.cache.invalidate("brew").await?;
 
@@ -415,17 +437,25 @@ impl PackageManager for BrewManager {
         }
         args.push(name.to_string());
 
-        warn!("brew uninstall {} (force: {})", name, force);
+        info!("brew uninstall {} (force: {})", name, force);
 
         let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
-        if self.exec(&args_refs).await.is_err() {
-            let mut cask_args = vec!["uninstall".to_string(), "--cask".to_string()];
-            if force {
-                cask_args.push("--force".to_string());
+        match self.exec(&args_refs).await {
+            Ok(_) => {}
+            Err(formula_err) => {
+                let mut cask_args = vec!["uninstall", "--cask"];
+                if force {
+                    cask_args.push("--force");
+                }
+                cask_args.push(name);
+                self.exec(&cask_args).await.map_err(|cask_err| {
+                    BoxyError::CommandFailed {
+                        manager: "brew".to_string(),
+                        command: format!("uninstall {} (formula: {}, cask: {})", name, formula_err, cask_err),
+                        exit_code: -1,
+                    }
+                })?;
             }
-            cask_args.push(name.to_string());
-            let cask_refs: Vec<&str> = cask_args.iter().map(|s| s.as_str()).collect();
-            self.exec(&cask_refs).await?;
         }
         self.cache.invalidate("brew").await?;
 

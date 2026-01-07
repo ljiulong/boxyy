@@ -1789,7 +1789,7 @@ const SettingsView: React.FC<{ onOpenLogs: () => void }> = ({ onOpenLogs }) => {
       } catch (error) {
         console.error("Check update failed:", error);
         setUpdateStatus("error");
-        setUpdateMessage(t("settings.about.update_failed"));
+        setUpdateMessage(t("settings.about.check_failed"));
       }
     },
     [t]

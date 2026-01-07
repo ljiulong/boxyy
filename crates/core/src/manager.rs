@@ -14,7 +14,7 @@ pub trait PackageManager: Send + Sync {
 
     async fn get_info(&self, name: &str) -> Result<crate::package::Package>;
 
-    async fn install(&self, name: &str, version: Option<&str>) -> Result<()>;
+    async fn install(&self, name: &str, version: Option<&str>, force: bool) -> Result<()>;
 
     async fn upgrade(&self, name: &str) -> Result<()>;
 

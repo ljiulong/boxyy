@@ -4,8 +4,6 @@ use boxy_core::{
     manager::PackageManager,
     package::{Capability, Package},
 };
-use boxy_core::retry::retry_with_backoff;
-use boxy_core::{DEFAULT_MAX_ATTEMPTS, DEFAULT_RETRY_BASE_DELAY};
 use boxy_error::{BoxyError, Result};
 use std::sync::Arc;
 use tokio::process::Command;
@@ -30,27 +28,24 @@ impl CargoManager {
     async fn exec(&self, args: &[&str]) -> Result<String> {
         debug!("执行 cargo 命令: {}", args.join(" "));
 
-        retry_with_backoff(DEFAULT_MAX_ATTEMPTS, DEFAULT_RETRY_BASE_DELAY, || async {
-            let output = timeout(COMMAND_TIMEOUT, Command::new("cargo").args(args).output())
-                .await
-                .map_err(|_| BoxyError::CommandTimeout)?
-                .map_err(|_| BoxyError::CommandFailed {
-                    manager: "cargo".to_string(),
-                    command: args.join(" "),
-                    exit_code: -1,
-                })?;
+        let output = timeout(COMMAND_TIMEOUT, Command::new("cargo").args(args).output())
+            .await
+            .map_err(|_| BoxyError::CommandTimeout)?
+            .map_err(|_| BoxyError::CommandFailed {
+                manager: "cargo".to_string(),
+                command: args.join(" "),
+                exit_code: -1,
+            })?;
 
-            if output.status.success() {
-                Ok(String::from_utf8_lossy(&output.stdout).to_string())
-            } else {
-                Err(BoxyError::CommandFailed {
-                    manager: "cargo".to_string(),
-                    command: args.join(" "),
-                    exit_code: output.status.code().unwrap_or(-1),
-                })
-            }
-        })
-        .await
+        if output.status.success() {
+            Ok(String::from_utf8_lossy(&output.stdout).to_string())
+        } else {
+            Err(BoxyError::CommandFailed {
+                manager: "cargo".to_string(),
+                command: args.join(" "),
+                exit_code: output.status.code().unwrap_or(-1),
+            })
+        }
     }
 }
 
@@ -203,8 +198,11 @@ impl PackageManager for CargoManager {
         })
     }
 
-    async fn install(&self, name: &str, version: Option<&str>) -> Result<()> {
+    async fn install(&self, name: &str, version: Option<&str>, force: bool) -> Result<()> {
         let mut args: Vec<String> = vec!["install".to_string()];
+        if force {
+            args.push("--force".to_string());
+        }
         if let Some(v) = version {
             args.push("--version".to_string());
             args.push(v.to_string());

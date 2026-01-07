@@ -4,8 +4,6 @@ use boxy_core::{
     manager::PackageManager,
     package::{Capability, Package},
 };
-use boxy_core::retry::retry_with_backoff;
-use boxy_core::{DEFAULT_MAX_ATTEMPTS, DEFAULT_RETRY_BASE_DELAY};
 use boxy_error::{BoxyError, Result};
 use std::sync::Arc;
 use tokio::process::Command;
@@ -26,27 +24,24 @@ impl PipxManager {
     async fn exec(&self, args: &[&str]) -> Result<String> {
         debug!("执行 pipx 命令: {}", args.join(" "));
 
-        retry_with_backoff(DEFAULT_MAX_ATTEMPTS, DEFAULT_RETRY_BASE_DELAY, || async {
-            let output = timeout(COMMAND_TIMEOUT, Command::new("pipx").args(args).output())
-                .await
-                .map_err(|_| BoxyError::CommandTimeout)?
-                .map_err(|_| BoxyError::CommandFailed {
-                    manager: "pipx".to_string(),
-                    command: args.join(" "),
-                    exit_code: -1,
-                })?;
+        let output = timeout(COMMAND_TIMEOUT, Command::new("pipx").args(args).output())
+            .await
+            .map_err(|_| BoxyError::CommandTimeout)?
+            .map_err(|_| BoxyError::CommandFailed {
+                manager: "pipx".to_string(),
+                command: args.join(" "),
+                exit_code: -1,
+            })?;
 
-            if output.status.success() {
-                Ok(String::from_utf8_lossy(&output.stdout).to_string())
-            } else {
-                Err(BoxyError::CommandFailed {
-                    manager: "pipx".to_string(),
-                    command: args.join(" "),
-                    exit_code: output.status.code().unwrap_or(-1),
-                })
-            }
-        })
-        .await
+        if output.status.success() {
+            Ok(String::from_utf8_lossy(&output.stdout).to_string())
+        } else {
+            Err(BoxyError::CommandFailed {
+                manager: "pipx".to_string(),
+                command: args.join(" "),
+                exit_code: output.status.code().unwrap_or(-1),
+            })
+        }
     }
 
     fn parse_list_output(&self, output: &str) -> Vec<Package> {
@@ -115,21 +110,17 @@ impl PackageManager for PipxManager {
 
     async fn search(&self, query: &str) -> Result<Vec<Package>> {
         // pipx 不支持搜索，使用 pip search
-        let output = retry_with_backoff(DEFAULT_MAX_ATTEMPTS, DEFAULT_RETRY_BASE_DELAY, || async {
-            let output = timeout(
-                COMMAND_TIMEOUT,
-                Command::new("pip").args(["search", query]).output(),
-            )
-            .await
-            .map_err(|_| BoxyError::CommandTimeout)?
-            .map_err(|_| BoxyError::CommandFailed {
-                manager: "pipx".to_string(),
-                command: format!("pip search {}", query),
-                exit_code: -1,
-            })?;
-            Ok(output)
-        })
-        .await?;
+        let output = timeout(
+            COMMAND_TIMEOUT,
+            Command::new("pip").args(["search", query]).output(),
+        )
+        .await
+        .map_err(|_| BoxyError::CommandTimeout)?
+        .map_err(|_| BoxyError::CommandFailed {
+            manager: "pipx".to_string(),
+            command: format!("pip search {}", query),
+            exit_code: -1,
+        })?;
 
         if !output.status.success() {
             return Ok(Vec::new());
@@ -176,21 +167,17 @@ impl PackageManager for PipxManager {
 
     async fn get_info(&self, name: &str) -> Result<Package> {
         // pipx 没有直接的 info 命令，使用 pip show
-        let output = retry_with_backoff(DEFAULT_MAX_ATTEMPTS, DEFAULT_RETRY_BASE_DELAY, || async {
-            let output = timeout(
-                COMMAND_TIMEOUT,
-                Command::new("pip").args(["show", name]).output(),
-            )
-            .await
-            .map_err(|_| BoxyError::CommandTimeout)?
-            .map_err(|_| BoxyError::CommandFailed {
-                manager: "pipx".to_string(),
-                command: format!("pip show {}", name),
-                exit_code: -1,
-            })?;
-            Ok(output)
-        })
-        .await?;
+        let output = timeout(
+            COMMAND_TIMEOUT,
+            Command::new("pip").args(["show", name]).output(),
+        )
+        .await
+        .map_err(|_| BoxyError::CommandTimeout)?
+        .map_err(|_| BoxyError::CommandFailed {
+            manager: "pipx".to_string(),
+            command: format!("pip show {}", name),
+            exit_code: -1,
+        })?;
 
         if !output.status.success() {
             return Err(BoxyError::CommandFailed {
@@ -227,8 +214,11 @@ impl PackageManager for PipxManager {
         })
     }
 
-    async fn install(&self, name: &str, version: Option<&str>) -> Result<()> {
+    async fn install(&self, name: &str, version: Option<&str>, force: bool) -> Result<()> {
         let mut args: Vec<String> = vec!["install".to_string()];
+        if force {
+            args.push("--force".to_string());
+        }
         let target = match version {
             Some(v) => format!("{}=={}", name, v),
             None => name.to_string(),

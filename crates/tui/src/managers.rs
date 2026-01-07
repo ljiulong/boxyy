@@ -11,6 +11,7 @@ use boxy_pnpm::PnpmManager;
 use boxy_uv::UvManager;
 use boxy_yarn::YarnManager;
 use std::sync::Arc;
+use std::env;
 
 pub const MANAGER_NAMES: [&str; 10] = [
   "brew", "npm", "pnpm", "yarn", "bun", "pip", "pipx", "uv", "cargo", "mas",
@@ -22,16 +23,21 @@ pub fn supports_global(name: &str) -> bool {
 }
 
 pub fn create_manager(name: &str, cache: Arc<Cache>, global: bool) -> Option<Box<dyn PackageManager>> {
+  let local_workdir = if global {
+    None
+  } else {
+    env::current_dir().ok()
+  };
   match name {
     "brew" => Some(Box::new(BrewManager::new(cache))),
     "npm" => Some(Box::new(NpmManager::new(
       cache,
       if global { NpmScope::Global } else { NpmScope::Local },
-      None,
+      local_workdir.clone(),
     ))),
-    "pnpm" => Some(Box::new(PnpmManager::new(cache, global, None))),
-    "yarn" => Some(Box::new(YarnManager::new(cache, global, None))),
-    "bun" => Some(Box::new(BunManager::new(cache, global, None))),
+    "pnpm" => Some(Box::new(PnpmManager::new(cache, global, local_workdir.clone()))),
+    "yarn" => Some(Box::new(YarnManager::new(cache, global, local_workdir.clone()))),
+    "bun" => Some(Box::new(BunManager::new(cache, global, local_workdir.clone()))),
     "pip" => Some(Box::new(PipManager::new(cache, global))),
     "pipx" => Some(Box::new(PipxManager::new(cache))),
     "uv" => Some(Box::new(UvManager::new(cache, global))),

@@ -85,7 +85,7 @@ impl App {
       current_job: None,
       search_query: String::new(),
       cache,
-      executor: Arc::new(ManagerExecutor::new(1, Duration::from_secs(1))),
+      executor: Arc::new(ManagerExecutor::default()),
       should_quit: false,
       should_redraw: true,
       status_message: "正在初始化...".to_string(),

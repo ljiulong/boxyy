@@ -19,7 +19,7 @@ mod managers;
 use managers::{create_manager, supports_global, MANAGER_NAMES};
 
 const COMMAND_TIMEOUT: Duration = Duration::from_secs(300);
-const READ_COMMAND_TIMEOUT: Duration = Duration::from_secs(30);
+const READ_COMMAND_TIMEOUT: Duration = Duration::from_secs(60);
 const SCAN_CONCURRENCY: usize = 5;
 const EXIT_ERROR: i32 = 1;
 const EXIT_USAGE: i32 = 2;
@@ -141,7 +141,7 @@ async fn main() -> Result<()> {
 
     // 创建缓存
     let cache = Arc::new(Cache::new().context("创建缓存失败")?);
-    let executor = Arc::new(ManagerExecutor::new(1, Duration::from_secs(1)));
+    let executor = Arc::new(ManagerExecutor::default());
 
     // 执行命令
     match cli.command {
@@ -788,7 +788,7 @@ async fn cmd_install(
     package: &str,
     version: Option<&str>,
     manager_name: Option<&str>,
-    _force: bool,
+    force: bool,
     json: bool,
 ) -> Result<()> {
     let manager_name = match manager_name {
@@ -832,7 +832,7 @@ async fn cmd_install(
             .ok_or_else(|| BoxyError::ManagerNotFound {
                 name: manager_name.clone(),
             })?;
-            timeout(COMMAND_TIMEOUT, manager.install(package, version))
+            timeout(COMMAND_TIMEOUT, manager.install(package, version, force))
                 .await
                 .map_err(|_| BoxyError::CommandTimeout)?
         })

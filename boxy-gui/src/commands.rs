@@ -496,7 +496,7 @@ async fn spawn_task(
       let manager_impl = create_manager(&manager, cache.clone(), global, workdir.clone());
       if let Some(mgr) = manager_impl {
         match operation {
-          Operation::Install => mgr.install(&package, version.as_deref()).await,
+          Operation::Install => mgr.install(&package, version.as_deref(), force).await,
           Operation::Update => mgr.upgrade(&package).await,
           Operation::Uninstall => mgr.uninstall(&package, force).await,
         }

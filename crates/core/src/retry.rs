@@ -22,7 +22,9 @@ where
                 if attempt >= max_attempts {
                     return Err(err);
                 }
-                let factor = 1u32 << (attempt - 1);
+                // 限制最大 factor 为 32 (2^5)，防止溢出
+                let shift = (attempt - 1).min(5);
+                let factor = 1u32 << shift;
                 let delay = base_delay.checked_mul(factor).unwrap_or(base_delay);
                 sleep(delay).await;
                 attempt += 1;

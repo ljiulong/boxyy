@@ -21,6 +21,7 @@ boxy-pnpm = { path = "../managers/pnpm" }
 boxy-uv = { path = "../managers/uv" }
 boxy-yarn = { path = "../managers/yarn" }
 anyhow.workspace = true
+dirs.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 chrono.workspace = true

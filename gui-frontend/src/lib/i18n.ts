@@ -37,6 +37,7 @@ const messages: Record<Locale, Record<string, string>> = {
     "settings.about.update_installing": "正在安装更新…",
     "settings.about.update_ready": "更新完成，正在重启…",
     "settings.about.update_failed": "更新失败，请重试",
+    "settings.about.check_failed": "检测失败，建议手动前往 GitHub 页面查看",
     "settings.about.update_action": "更新到 {version}"
   },
   en: {
@@ -72,6 +73,7 @@ const messages: Record<Locale, Record<string, string>> = {
     "settings.about.update_installing": "Installing update…",
     "settings.about.update_ready": "Update complete, restarting…",
     "settings.about.update_failed": "Update failed, please retry",
+    "settings.about.check_failed": "Check failed, please visit GitHub releases manually",
     "settings.about.update_action": "Update to {version}"
   },
 };
