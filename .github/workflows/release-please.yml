@@ -101,13 +101,13 @@ jobs:
           cp "${DMG_PATH}" "${DIST_DIR}/Boxy-${VERSION_TAG}-macos.dmg"
           UPDATER_TAR="$(find "${BUNDLE_ROOT}" -type f -name '*.app.tar.gz' | head -n 1)"
           if [[ -z "${UPDATER_TAR}" ]]; then
-            echo "Updater artifacts not found; skipping latest.json generation." >&2
-            exit 0
+            echo "Updater .app.tar.gz not found; failing to prevent a broken auto-update release." >&2
+            exit 1
           fi
           SIG_PATH="${UPDATER_TAR}.sig"
           if [[ ! -f "${SIG_PATH}" ]]; then
-            echo "No signature found for ${UPDATER_TAR}; skipping latest.json generation." >&2
-            exit 0
+            echo "Updater signature not found for ${UPDATER_TAR}; failing to prevent a broken auto-update release." >&2
+            exit 1
           fi
           cp "${UPDATER_TAR}" "${DIST_DIR}/"
           cp "${SIG_PATH}" "${DIST_DIR}/"
@@ -119,22 +119,7 @@ jobs:
           PUB_DATE="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
           SIGNATURE="$(cat "${SIG_PATH}")"
           UPDATER_FILE="$(basename "${UPDATER_TAR}")"
-          python3 - <<PY > "${DIST_DIR}/latest.json"
-import json
-
-data = {
-    "version": "${VERSION_TAG#v}",
-    "notes": "",
-    "pub_date": "${PUB_DATE}",
-    "platforms": {
-        "${PLATFORM_KEY}": {
-            "signature": ${SIGNATURE!r},
-            "url": "https://github.com/ljiulong/boxyy/releases/download/${VERSION_TAG}/${UPDATER_FILE}",
-        }
-    },
-}
-print(json.dumps(data, indent=2))
-PY
+          python3 -c "import json; print(json.dumps({'version': '${VERSION_TAG#v}', 'notes': '', 'pub_date': '${PUB_DATE}', 'platforms': {'${PLATFORM_KEY}': {'signature': '${SIGNATURE}', 'url': 'https://github.com/ljiulong/boxyy/releases/download/${VERSION_TAG}/${UPDATER_FILE}'}}}, indent=2))" > "${DIST_DIR}/latest.json"
 
       - name: Upload GUI artifacts
         uses: actions/upload-artifact@v4
