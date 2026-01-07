@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.4](https://github.com/ljiulong/boxyy/compare/v0.3.3...v0.3.4) (2026-01-07)
+
+
+### Bug Fixes
+
+* add RELEASE_PLEASE_TOKEN to release-please workflow for enhanced security ([6b85b94](https://github.com/ljiulong/boxyy/commit/6b85b94b1a447a4e62e49ea67672ee454cfdacff))
+
 ## [0.3.3](https://github.com/ljiulong/boxyy/compare/v0.3.2...v0.3.3) (2026-01-07)
 
 
