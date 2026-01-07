@@ -90,7 +90,7 @@ JSON 输出：
 双击安装后的桌面应用即可使用。
 
 ## 下载指南
-推荐下载方式：Homebrew（macOS）
+macOS 推荐下载方式：Homebrew（避免系统拦截，安装后可直接使用）
 
 ```bash
 # 订阅本仓库的 tap
@@ -116,6 +116,19 @@ brew install --cask boxy-gui
      - macOS：`.dmg`/`.app`
 4. 解压后运行即可。
 
+macOS CLI/TUI 运行提示：
+- 从 GitHub Releases 直接下载的 CLI/TUI 可执行文件会被 Gatekeeper 标记为“来自互联网”，首次运行可能需要手动允许。
+- 若希望“下载后直接可用”，请使用上面的 Homebrew 安装方式。
+- 若仍选择手动下载，可将可执行文件放入 PATH（无需 sudo）：
+
+```bash
+mkdir -p ~/.local/bin
+mv ~/Downloads/boxy-cli-macOS ~/.local/bin/boxy
+chmod +x ~/.local/bin/boxy
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
 macOS GUI 安装提示：
 
 1. 下载 `.dmg` 后双击打开，将应用拖到 “Applications”。
@@ -133,4 +146,3 @@ gh release download nightly -R ljiulong/boxyy -p "boxy-cli-tui-*.tar.gz" -p "box
 # 下载 GUI 安装包（按系统匹配）
 gh release download nightly -R ljiulong/boxyy -p "*.dmg" -p "*.msi" -p "*.exe" -p "*.AppImage" -p "*.deb" -p "*.rpm"
 ```
-

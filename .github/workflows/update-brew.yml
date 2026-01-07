@@ -25,8 +25,19 @@ jobs:
           CLI_TUI_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/boxy-cli-tui-${TAG}-macOS.tar.gz"
           GUI_DMG_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/Boxy-${TAG}-macos.dmg"
 
-          CLI_TUI_SHA=$(curl -fL -s "${CLI_TUI_URL}" | shasum -a 256 | awk '{print $1}')
-          GUI_DMG_SHA=$(curl -fL -s "${GUI_DMG_URL}" | shasum -a 256 | awk '{print $1}')
+          for attempt in {1..10}; do
+            CLI_TUI_SHA=$(curl -fL -s "${CLI_TUI_URL}" | shasum -a 256 | awk '{print $1}') && break || true
+            sleep 20
+          done
+          for attempt in {1..10}; do
+            GUI_DMG_SHA=$(curl -fL -s "${GUI_DMG_URL}" | shasum -a 256 | awk '{print $1}') && break || true
+            sleep 20
+          done
+
+          if [[ -z "${CLI_TUI_SHA}" || -z "${GUI_DMG_SHA}" ]]; then
+            echo "Release assets not ready for ${TAG}" >&2
+            exit 1
+          fi
 
           export VERSION CLI_TUI_SHA GUI_DMG_SHA
           python - <<'PY'
