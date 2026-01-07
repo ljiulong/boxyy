@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/ljiulong/boxyy/compare/v0.4.1...v0.4.2) (2026-01-07)
+
+
+### Bug Fixes
+
+* simplify update handling in SettingsView; replace custom update type with plugin's Update type; improve event handling for download progress and completion ([214b619](https://github.com/ljiulong/boxyy/commit/214b619921a572fcf260b1b922db32c400de272f))
+
 ## [0.4.1](https://github.com/ljiulong/boxyy/compare/v0.4.0...v0.4.1) (2026-01-07)
 
 
