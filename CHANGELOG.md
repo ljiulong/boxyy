@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/ljiulong/boxyy/compare/v0.5.6...v0.6.0) (2026-01-07)
+
+
+### Features
+
+* enhance Boxy package manager with cask support and improve README documentation ([e552f19](https://github.com/ljiulong/boxyy/commit/e552f19caf1983814491e6613748818158cda0c2))
+
 ## [0.5.6](https://github.com/ljiulong/boxyy/compare/v0.5.5...v0.5.6) (2026-01-07)
 
 
