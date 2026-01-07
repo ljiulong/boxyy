@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "tauri": "cd ../boxy-gui && tauri",
     "tauri:dev": "cd ../boxy-gui && tauri dev",
-    "tauri:build": "pnpm build && cd ../boxy-gui && tauri build --bundles app"
+    "tauri:build": "pnpm build && cd ../boxy-gui && tauri build"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",

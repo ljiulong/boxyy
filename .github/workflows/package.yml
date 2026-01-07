@@ -9,11 +9,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: macos-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,72 +30,47 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Build CLI/TUI
-        run: cargo build --release -p boxy-cli -p boxy-tui
-
-      - name: Install Linux dependencies
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libgtk-3-dev \
-            libwebkit2gtk-4.1-dev \
-            libappindicator3-dev \
-            librsvg2-dev \
-            patchelf
-
       - name: Build Tauri bundle
         shell: bash
         run: |
           chmod +x scripts/ci/package-tauri.sh
           ./scripts/ci/package-tauri.sh
 
-      - name: Package CLI/TUI
+      - name: Collect macOS artifacts
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="${{ github.ref_name }}"
-          if [[ "${{ github.ref_type }}" != "tag" ]]; then
-            VERSION="nightly"
-          fi
           DIST_DIR="dist"
           mkdir -p "${DIST_DIR}"
-          ARCHIVE_PREFIX="boxy-cli-tui-v${VERSION}-${{ runner.os }}"
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            cp target/release/boxy.exe "${DIST_DIR}/boxy-cli-${{ runner.os }}.exe"
-            cp target/release/boxy-tui.exe "${DIST_DIR}/boxy-tui-${{ runner.os }}.exe"
-            (cd "${DIST_DIR}" && 7z a "${ARCHIVE_PREFIX}.zip" "boxy-cli-${{ runner.os }}.exe" "boxy-tui-${{ runner.os }}.exe")
-          else
-            cp target/release/boxy "${DIST_DIR}/boxy-cli-${{ runner.os }}"
-            cp target/release/boxy-tui "${DIST_DIR}/boxy-tui-${{ runner.os }}"
-            chmod +x "${DIST_DIR}/boxy-cli-${{ runner.os }}" "${DIST_DIR}/boxy-tui-${{ runner.os }}"
-            tar -czf "${DIST_DIR}/${ARCHIVE_PREFIX}.tar.gz" -C "${DIST_DIR}" "boxy-cli-${{ runner.os }}" "boxy-tui-${{ runner.os }}"
+          VERSION="$(python - <<'PY'
+import json
+with open("boxy-gui/tauri.conf.json", "r", encoding="utf-8") as f:
+    data = json.load(f)
+print(data.get("version", "0.0.0"))
+PY
+)"
+          VERSION_TAG="v${VERSION}"
+          APP_PATH="$(find target/release/bundle/macos -maxdepth 1 -type d -name '*.app' | head -n 1)"
+          if [[ -z "${APP_PATH}" ]]; then
+            echo "No .app bundle found in target/release/bundle/macos" >&2
+            exit 1
           fi
+          ditto -c -k --sequesterRsrc --keepParent "${APP_PATH}" "${DIST_DIR}/Boxy-${VERSION_TAG}-macos.app.zip"
+          DMG_PATH="$(find target/release/bundle/dmg -maxdepth 1 -type f -name '*.dmg' | head -n 1)"
+          if [[ -z "${DMG_PATH}" ]]; then
+            echo "No .dmg found in target/release/bundle/dmg" >&2
+            exit 1
+          fi
+          cp "${DMG_PATH}" "${DIST_DIR}/Boxy-${VERSION_TAG}-macos.dmg"
 
       - name: Upload bundle
         uses: actions/upload-artifact@v4
         with:
-          name: boxy-${{ runner.os }}
-          path: |
-            target/release/bundle
-            dist/boxy-cli-tui-v${{ github.ref_name }}-${{ runner.os }}.*
-            dist/boxy-cli-tui-vnightly-${{ runner.os }}.*
-
-      - name: Publish release assets
-        if: github.event_name == 'push'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: nightly
-          name: Nightly
-          prerelease: true
-          target_commitish: ${{ github.sha }}
-          files: |
-            target/release/bundle/**/*
-            dist/boxy-cli-tui-v${{ github.ref_name }}-${{ runner.os }}.*
-            dist/boxy-cli-tui-vnightly-${{ runner.os }}.*
+          name: boxy-macos
+          path: dist
 
   verify-download:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     needs: build
     steps:
       - name: Checkout
