@@ -20,7 +20,9 @@ members = [
 ]
 
 [workspace.package]
+# x-release-please-start-version
 version = "0.6.2"
+# x-release-please-end
 edition = "2021"
 authors = ["Boxy Team"]
 license = "MIT OR Apache-2.0"
