@@ -45,6 +45,7 @@ tauri = { version = "2.0" }
 tauri-build = { version = "2", features = [] }
 tauri-plugin-shell = "2"
 tauri-plugin-opener = "2"
+tauri-plugin-updater = "2"
 uuid = { version = "1.6", features = ["v4"] }
 boxy-core = { path = "./crates/core" }
 boxy-cache = { path = "./crates/cache" }

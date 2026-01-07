@@ -11,7 +11,7 @@ if ! command -v pnpm >/dev/null 2>&1; then
 fi
 
 cd "${FRONTEND_DIR}"
-pnpm install --frozen-lockfile
+pnpm install
 pnpm build
 export PATH="${FRONTEND_DIR}/node_modules/.bin:${PATH}"
 cd "${ROOT_DIR}/boxy-gui"

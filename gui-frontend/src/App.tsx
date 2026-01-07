@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
 import { listen } from "@tauri-apps/api/event";
+import { exit, relaunch } from "@tauri-apps/api/process";
+import { check, onUpdaterEvent } from "@tauri-apps/plugin-updater";
 import { useTheme } from "./theme";
 import { useManagers } from "./hooks/useManagers";
 import { usePackages } from "./hooks/usePackages";
@@ -1711,11 +1713,104 @@ const TasksView: React.FC<{
   );
 };
 
+type UpdateStatus =
+  | "idle"
+  | "checking"
+  | "available"
+  | "downloading"
+  | "installing"
+  | "done"
+  | "error";
+
+type UpdateHandle = {
+  available?: boolean;
+  version?: string;
+  body?: string;
+  downloadAndInstall?: (onProgress?: (event: unknown) => void) => Promise<void>;
+};
+
 const SettingsView: React.FC<{ onOpenLogs: () => void }> = ({ onOpenLogs }) => {
   const { theme, setTheme } = useTheme();
   const { locale, setLocale, t } = useI18n();
   const [appVersion, setAppVersion] = useState<string>("");
   const gitUrl = "https://github.com/ljiulong/boxyy";
+  const releasesUrl = "https://github.com/ljiulong/boxyy/releases/latest";
+  const updateRef = useRef<UpdateHandle | null>(null);
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus>("idle");
+  const [updateProgress, setUpdateProgress] = useState<number | null>(null);
+  const [updateVersion, setUpdateVersion] = useState<string | null>(null);
+  const [updateMessage, setUpdateMessage] = useState<string | null>(null);
+
+  const handleUpdaterEvent = useCallback((event: unknown) => {
+    const payload = event as Record<string, unknown> | null;
+    const statusRaw = payload?.status ?? payload?.event ?? "";
+    const status = String(statusRaw).toLowerCase();
+    const downloaded =
+      typeof payload?.downloaded === "number"
+        ? payload.downloaded
+        : typeof (payload as { bytesDownloaded?: number })?.bytesDownloaded === "number"
+          ? (payload as { bytesDownloaded: number }).bytesDownloaded
+          : typeof (payload as { progress?: { downloaded?: number } })?.progress?.downloaded ===
+              "number"
+            ? (payload as { progress: { downloaded: number } }).progress.downloaded
+            : undefined;
+    const total =
+      typeof payload?.contentLength === "number"
+        ? payload.contentLength
+        : typeof (payload as { total?: number })?.total === "number"
+          ? (payload as { total: number }).total
+          : typeof (payload as { totalBytes?: number })?.totalBytes === "number"
+            ? (payload as { totalBytes: number }).totalBytes
+            : typeof (payload as { progress?: { total?: number } })?.progress?.total === "number"
+              ? (payload as { progress: { total: number } }).progress.total
+              : undefined;
+
+    if (status.includes("download")) {
+      setUpdateStatus("downloading");
+    } else if (status.includes("install")) {
+      setUpdateStatus("installing");
+    } else if (status.includes("done") || status.includes("success")) {
+      setUpdateStatus("done");
+    } else if (status.includes("error")) {
+      setUpdateStatus("error");
+      setUpdateMessage(t("settings.about.update_failed"));
+    }
+
+    if (typeof downloaded === "number" && typeof total === "number" && total > 0) {
+      const next = Math.min(100, Math.round((downloaded / total) * 100));
+      setUpdateProgress(next);
+    }
+  }, [t]);
+
+  const checkForUpdate = useCallback(
+    async (silent = false) => {
+      if (!isTauri()) {
+        return;
+      }
+      if (!silent) {
+        setUpdateStatus("checking");
+        setUpdateProgress(null);
+        setUpdateMessage(null);
+      }
+      try {
+        const update = (await check()) as UpdateHandle | null;
+        if (update?.available) {
+          updateRef.current = update;
+          setUpdateVersion(update.version ?? null);
+          setUpdateStatus("available");
+          return;
+        }
+        updateRef.current = null;
+        setUpdateVersion(null);
+        setUpdateStatus("idle");
+      } catch (error) {
+        console.error("Check update failed:", error);
+        setUpdateStatus("error");
+        setUpdateMessage(t("settings.about.update_failed"));
+      }
+    },
+    [t]
+  );
 
   useEffect(() => {
     if (!isTauri()) {
@@ -1730,6 +1825,26 @@ const SettingsView: React.FC<{ onOpenLogs: () => void }> = ({ onOpenLogs }) => {
         console.error("Get app version failed:", error);
         setAppVersion("unknown");
       });
+
+    checkForUpdate(true);
+    let unlisten: (() => void) | null = null;
+    const maybeUnlisten = onUpdaterEvent(handleUpdaterEvent);
+    if (typeof (maybeUnlisten as Promise<() => void>)?.then === "function") {
+      (maybeUnlisten as Promise<() => void>)
+        .then((cleanup) => {
+          unlisten = cleanup;
+        })
+        .catch((error) => {
+          console.warn("Updater event listener setup failed:", error);
+        });
+    } else if (typeof maybeUnlisten === "function") {
+      unlisten = maybeUnlisten;
+    }
+    return () => {
+      if (unlisten) {
+        unlisten();
+      }
+    };
   }, []);
 
   const onOpenGit = async (event: React.MouseEvent<HTMLAnchorElement>) => {
@@ -1741,6 +1856,87 @@ const SettingsView: React.FC<{ onOpenLogs: () => void }> = ({ onOpenLogs }) => {
       window.open(gitUrl, "_blank", "noreferrer");
     }
   };
+
+  const onCheckUpdate = useCallback(async () => {
+    if (!isTauri()) {
+      window.open(releasesUrl, "_blank", "noreferrer");
+      return;
+    }
+    if (updateStatus === "checking" || updateStatus === "downloading") {
+      return;
+    }
+    if (updateStatus === "installing") {
+      return;
+    }
+    if (updateStatus === "available") {
+      setUpdateStatus("downloading");
+      setUpdateProgress(0);
+      setUpdateMessage(null);
+      try {
+        const update = updateRef.current ?? ((await check()) as UpdateHandle | null);
+        if (!update?.available || typeof update.downloadAndInstall !== "function") {
+          setUpdateStatus("idle");
+          return;
+        }
+        await update.downloadAndInstall(handleUpdaterEvent);
+        setUpdateStatus("done");
+        setUpdateMessage(t("settings.about.update_ready"));
+        try {
+          await relaunch();
+        } catch (error) {
+          console.warn("Relaunch failed:", error);
+          await exit(0);
+        }
+      } catch (error) {
+        console.error("Install update failed:", error);
+        setUpdateStatus("error");
+        setUpdateMessage(t("settings.about.update_failed"));
+      }
+      return;
+    }
+    await checkForUpdate();
+  }, [checkForUpdate, handleUpdaterEvent, releasesUrl, t, updateStatus]);
+
+  const updateLabel = useMemo(() => {
+    if (updateStatus === "available" && updateVersion) {
+      return t("settings.about.update_action", { version: updateVersion });
+    }
+    if (updateStatus === "checking") {
+      return t("settings.about.update_checking");
+    }
+    if (updateStatus === "downloading") {
+      return t("settings.about.update_downloading");
+    }
+    if (updateStatus === "installing") {
+      return t("settings.about.update_installing");
+    }
+    return t("settings.about.check_update");
+  }, [t, updateStatus, updateVersion]);
+
+  const updateStatusText = useMemo(() => {
+    if (updateStatus === "available" && updateVersion) {
+      return t("settings.about.update_available", { version: updateVersion });
+    }
+    if (updateStatus === "checking") {
+      return t("settings.about.update_checking");
+    }
+    if (updateStatus === "downloading") {
+      return t("settings.about.update_downloading");
+    }
+    if (updateStatus === "installing") {
+      return t("settings.about.update_installing");
+    }
+    if (updateStatus === "done") {
+      return t("settings.about.update_ready");
+    }
+    if (updateStatus === "error") {
+      return updateMessage ?? t("settings.about.update_failed");
+    }
+    if (updateStatus === "idle") {
+      return t("settings.about.update_latest");
+    }
+    return null;
+  }, [t, updateMessage, updateStatus, updateVersion]);
 
   return (
     <div className="settings-stack">
@@ -1828,10 +2024,35 @@ const SettingsView: React.FC<{ onOpenLogs: () => void }> = ({ onOpenLogs }) => {
             </a>
           </div>
           <div className="control-buttons">
-            <button type="button" className="chip">
-              {t("settings.about.check_update")}
+            <button
+              type="button"
+              className="chip"
+              onClick={onCheckUpdate}
+              disabled={
+                updateStatus === "checking" ||
+                updateStatus === "downloading" ||
+                updateStatus === "installing"
+              }
+            >
+              {updateLabel}
             </button>
           </div>
+          {updateStatusText && (
+            <div className="update-status">
+              <span>{updateStatusText}</span>
+              {typeof updateProgress === "number" && (
+                <span>{` ${updateProgress}%`}</span>
+              )}
+            </div>
+          )}
+          {typeof updateProgress === "number" && (
+            <div className="update-progress">
+              <div
+                className="update-progress-bar"
+                style={{ width: `${updateProgress}%` }}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

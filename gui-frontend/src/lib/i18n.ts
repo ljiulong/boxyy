@@ -30,6 +30,14 @@ const messages: Record<Locale, Record<string, string>> = {
     "settings.about.version": "版本",
     "settings.about.git": "Git 地址",
     "settings.about.check_update": "检测更新",
+    "settings.about.update_checking": "检查更新中…",
+    "settings.about.update_latest": "已是最新版本",
+    "settings.about.update_available": "发现新版本 {version}",
+    "settings.about.update_downloading": "正在下载更新…",
+    "settings.about.update_installing": "正在安装更新…",
+    "settings.about.update_ready": "更新完成，正在重启…",
+    "settings.about.update_failed": "更新失败，请重试",
+    "settings.about.update_action": "更新到 {version}"
   },
   en: {
     "nav.dashboard": "Overview",
@@ -57,6 +65,14 @@ const messages: Record<Locale, Record<string, string>> = {
     "settings.about.version": "Version",
     "settings.about.git": "Git",
     "settings.about.check_update": "Check update",
+    "settings.about.update_checking": "Checking for updates…",
+    "settings.about.update_latest": "You're up to date",
+    "settings.about.update_available": "Update available {version}",
+    "settings.about.update_downloading": "Downloading update…",
+    "settings.about.update_installing": "Installing update…",
+    "settings.about.update_ready": "Update complete, restarting…",
+    "settings.about.update_failed": "Update failed, please retry",
+    "settings.about.update_action": "Update to {version}"
   },
 };
 
@@ -79,6 +95,5 @@ export const useI18n = () => {
 
   return { locale, setLocale, t };
 };
-
 
 

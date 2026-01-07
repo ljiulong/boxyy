@@ -9,6 +9,7 @@
   --accent: #111827;
   --accent-soft: #e5e7eb;
   --accent-strong: #0f172a;
+  --titlebar-height: 28px;
 }
 
 .dark {
@@ -56,7 +57,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 16px 14px;
+  padding: calc(16px + var(--titlebar-height)) 14px 16px;
   border-right: 1px solid var(--border-subtle);
   backdrop-filter: blur(22px);
   background: var(--bg-elevated);
@@ -267,7 +268,7 @@ body {
   display: flex;
   flex-direction: column;
   background: var(--bg);
-  padding: 16px 18px 18px;
+  padding: calc(16px + var(--titlebar-height)) 18px 18px;
   border-right: 1px solid var(--border-subtle);
   height: 100vh;
   overflow: hidden;
@@ -812,7 +813,7 @@ body {
 /* 右侧信息栏 */
 
 .right-rail {
-  padding: 16px 14px;
+  padding: calc(16px + var(--titlebar-height)) 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -1185,4 +1186,25 @@ body {
   background: rgba(234, 179, 8, 0.16);
   color: #f59e0b;
   border-color: rgba(234, 179, 8, 0.24);
+}
+
+.update-status {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+.update-progress {
+  margin-top: 8px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.2);
+  overflow: hidden;
+}
+
+.update-progress-bar {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(14, 165, 233, 0.8), rgba(34, 197, 94, 0.8));
+  transition: width 0.2s ease;
 }

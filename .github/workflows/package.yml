@@ -52,6 +52,9 @@ jobs:
 
       - name: Build Tauri bundle
         shell: bash
+        env:
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         run: |
           chmod +x scripts/ci/package-tauri.sh
           ./scripts/ci/package-tauri.sh
@@ -89,6 +92,14 @@ jobs:
             exit 1
           fi
           cp "${DMG_PATH}" "${DIST_DIR}/Boxy-${VERSION_TAG}-macos.dmg"
+          LATEST_JSON="$(find "${BUNDLE_ROOT}" -type f -name 'latest.json' | head -n 1)"
+          if [[ -z "${LATEST_JSON}" ]]; then
+            echo "No latest.json found under ${BUNDLE_ROOT}" >&2
+            exit 1
+          fi
+          cp "${LATEST_JSON}" "${DIST_DIR}/latest.json"
+          find "${BUNDLE_ROOT}" -maxdepth 3 -type f -name '*.sig' -exec cp {} "${DIST_DIR}/" \;
+          find "${BUNDLE_ROOT}" -maxdepth 3 -type f -name '*.tar.gz' -exec cp {} "${DIST_DIR}/" \;
 
       - name: Upload GUI artifacts
         uses: actions/upload-artifact@v4
@@ -197,6 +208,9 @@ jobs:
           files: |
             dist/**/Boxy-${{ env.TAG_NAME }}-macos.app.zip
             dist/**/Boxy-${{ env.TAG_NAME }}-macos.dmg
+            dist/**/latest.json
+            dist/**/*.sig
+            dist/**/Boxy*.tar.gz
             dist/**/boxy-cli-tui-${{ env.TAG_NAME }}-*.tar.gz
             dist/**/boxy-cli-tui-${{ env.TAG_NAME }}-*.zip
 

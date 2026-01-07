@@ -133,6 +133,15 @@ fn append_line_bytes(log_dir: &Path, bytes: &[u8]) -> Result<(), String> {
   let path = current_log_file(log_dir);
   if let Ok(metadata) = fs::metadata(&path) {
     if metadata.len() >= MAX_LOG_BYTES {
+      let mut file = OpenOptions::new()
+        .create(true)
+        .truncate(true)
+        .write(true)
+        .open(&path)
+        .map_err(|e| format!("打开日志文件失败: {}", e))?;
+      file
+        .write_all(bytes)
+        .map_err(|e| format!("写入日志失败: {}", e))?;
       return Ok(());
     }
   }
