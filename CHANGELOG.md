@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.2](https://github.com/ljiulong/boxyy/compare/v0.5.1...v0.5.2) (2026-01-07)
+
+
+### Bug Fixes
+
+* rename environment variables for Tauri signing in CI workflow ([ab752cc](https://github.com/ljiulong/boxyy/commit/ab752cc94fdf8dd202f31d2eae3c55cb94d4bd8c))
+
 ## [0.5.1](https://github.com/ljiulong/boxyy/compare/v0.5.0...v0.5.1) (2026-01-07)
 
 
