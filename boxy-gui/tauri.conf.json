@@ -13,7 +13,8 @@
         "width": 1320,
         "height": 860,
         "resizable": true,
-        "titleBarStyle": "Transparent"
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true
       }
     ],
     "security": {

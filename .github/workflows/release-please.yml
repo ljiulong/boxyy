@@ -290,8 +290,10 @@ jobs:
 
   update-brew:
     runs-on: macos-latest
-    needs: release
+    needs: [release, release-please]
     if: needs.release-please.outputs.release_created == 'true'
+    env:
+      TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -303,7 +305,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          TAG="${{ needs.release-please.outputs.tag_name }}"
+          TAG="${TAG_NAME}"
           VERSION="${TAG#v}"
 
           CLI_TUI_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/boxy-cli-tui-${TAG}-macOS.tar.gz"
