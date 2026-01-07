@@ -12,7 +12,8 @@
         "title": "Boxy",
         "width": 1320,
         "height": 860,
-        "resizable": true
+        "resizable": true,
+        "titleBarStyle": "Transparent"
       }
     ],
     "security": {

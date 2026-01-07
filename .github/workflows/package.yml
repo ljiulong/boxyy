@@ -92,14 +92,42 @@ jobs:
             exit 1
           fi
           cp "${DMG_PATH}" "${DIST_DIR}/Boxy-${VERSION_TAG}-macos.dmg"
-          LATEST_JSON="$(find "${BUNDLE_ROOT}" -type f -name 'latest.json' | head -n 1)"
-          if [[ -z "${LATEST_JSON}" ]]; then
-            echo "No latest.json found under ${BUNDLE_ROOT}" >&2
+          UPDATER_TAR="$(find "${BUNDLE_ROOT}" -type f -name '*.app.tar.gz' | head -n 1)"
+          if [[ -z "${UPDATER_TAR}" ]]; then
+            echo "No updater .app.tar.gz found under ${BUNDLE_ROOT}" >&2
+            find "${BUNDLE_ROOT}" -maxdepth 3 -type f -print || true
             exit 1
           fi
-          cp "${LATEST_JSON}" "${DIST_DIR}/latest.json"
-          find "${BUNDLE_ROOT}" -maxdepth 3 -type f -name '*.sig' -exec cp {} "${DIST_DIR}/" \;
-          find "${BUNDLE_ROOT}" -maxdepth 3 -type f -name '*.tar.gz' -exec cp {} "${DIST_DIR}/" \;
+          SIG_PATH="${UPDATER_TAR}.sig"
+          if [[ ! -f "${SIG_PATH}" ]]; then
+            echo "No signature found for ${UPDATER_TAR}" >&2
+            exit 1
+          fi
+          cp "${UPDATER_TAR}" "${DIST_DIR}/"
+          cp "${SIG_PATH}" "${DIST_DIR}/"
+          ARCH="$(uname -m)"
+          if [[ "${ARCH}" == "arm64" ]]; then
+            ARCH="aarch64"
+          fi
+          PLATFORM_KEY="darwin-${ARCH}"
+          PUB_DATE="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          SIGNATURE="$(cat "${SIG_PATH}")"
+          UPDATER_FILE="$(basename "${UPDATER_TAR}")"
+          python3 - <<PY > "${DIST_DIR}/latest.json"
+import json
+data = {
+  "version": "${VERSION_TAG#v}",
+  "notes": "",
+  "pub_date": "${PUB_DATE}",
+  "platforms": {
+    "${PLATFORM_KEY}": {
+      "signature": ${SIGNATURE!r},
+      "url": "https://github.com/ljiulong/boxyy/releases/download/${VERSION_TAG}/${UPDATER_FILE}"
+    }
+  }
+}
+print(json.dumps(data, indent=2))
+PY
 
       - name: Upload GUI artifacts
         uses: actions/upload-artifact@v4
