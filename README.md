@@ -91,6 +91,9 @@ JSON 输出：
 
 ## 下载指南
 macOS 推荐下载方式：Homebrew（避免系统拦截，安装后可直接使用）
+ 
+说明：
+- Homebrew 仅适用于 macOS；Linux/Windows 请使用 GitHub Releases 下载对应包。
 
 ```bash
 # 订阅本仓库的 tap
@@ -116,6 +119,36 @@ brew install --cask boxy-gui
      - macOS：`.dmg`/`.app`
 4. 解压后运行即可。
 
+## 常见问题
+
+### macOS 提示“无法打开”或“来自不明开发者”
+可执行以下命令移除隔离属性（不需要重装）：
+
+```bash
+sudo xattr -rd com.apple.quarantine /Applications/Boxy.app
+```
+
+### macOS CLI/TUI 可执行文件被拦截
+如果直接从 Releases 下载 CLI/TUI 压缩包并解压，可能同样被标记为“来自互联网”。可对解压目录执行：
+
+```bash
+sudo xattr -rd com.apple.quarantine /path/to/extracted
+```
+
+### Windows 提示已保护或 SmartScreen 拦截
+在提示窗口点击“更多信息” -> “仍要运行”。如果是压缩包解压后的可执行文件，可在 PowerShell 中执行：
+
+```powershell
+Unblock-File -Path "C:\path\to\boxy-cli-windows.exe"
+```
+
+### Linux 提示权限不足或无法执行
+解压后需要确保可执行权限：
+
+```bash
+chmod +x /path/to/boxy-cli-Linux
+```
+
 macOS CLI/TUI 运行提示：
 - 从 GitHub Releases 直接下载的 CLI/TUI 可执行文件会被 Gatekeeper 标记为“来自互联网”，首次运行可能需要手动允许。
 - 若希望“下载后直接可用”，请使用上面的 Homebrew 安装方式。
@@ -136,4 +169,4 @@ macOS GUI 安装提示：
 3. 也可以在 Finder 中右键应用选择“打开”，按提示确认。
 
 
-##Boxy只是包管理器的统一入口
+# Boxy不是包管理器，只是包管理器的统一入口。
