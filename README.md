@@ -135,14 +135,4 @@ macOS GUI 安装提示：
 2. 首次打开如果被拦截，前往“系统设置 → 隐私与安全性”，在“已阻止打开的应用”处选择“仍要打开”。
 3. 也可以在 Finder 中右键应用选择“打开”，按提示确认。
 
-命令行下载（示例）：
 
-使用 GitHub CLI（推荐）：
-
-```bash
-# 下载当前系统对应的 CLI/TUI 压缩包
-gh release download nightly -R ljiulong/boxyy -p "boxy-cli-tui-*.tar.gz" -p "boxy-cli-tui-*.zip"
-
-# 下载 GUI 安装包（按系统匹配）
-gh release download nightly -R ljiulong/boxyy -p "*.dmg" -p "*.msi" -p "*.exe" -p "*.AppImage" -p "*.deb" -p "*.rpm"
-```
