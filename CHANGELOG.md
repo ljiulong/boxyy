@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.4](https://github.com/ljiulong/boxyy/compare/v0.5.3...v0.5.4) (2026-01-07)
+
+
+### Bug Fixes
+
+* update README to include open source license section ([3d18b29](https://github.com/ljiulong/boxyy/commit/3d18b297833a3030a9b2e734e5fdf2e1a3f15614))
+
 ## [0.5.3](https://github.com/ljiulong/boxyy/compare/v0.5.2...v0.5.3) (2026-01-07)
 
 
