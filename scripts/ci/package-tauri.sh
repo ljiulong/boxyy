@@ -15,4 +15,4 @@ pnpm install
 pnpm build
 export PATH="${FRONTEND_DIR}/node_modules/.bin:${PATH}"
 cd "${ROOT_DIR}/boxy-gui"
-tauri build --bundles app,dmg
+tauri build --bundles app,dmg --updater
