@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.5](https://github.com/ljiulong/boxyy/compare/v0.3.4...v0.3.5) (2026-01-07)
+
+
+### Bug Fixes
+
+* update README with installation instructions for different OS and add common issues section; refactor CI workflow for Homebrew updates and remove outdated update-brew workflow ([8cbdbe1](https://github.com/ljiulong/boxyy/commit/8cbdbe18b9b8a43f849b42057856039725ba16a4))
+
 ## [0.3.4](https://github.com/ljiulong/boxyy/compare/v0.3.3...v0.3.4) (2026-01-07)
 
 
