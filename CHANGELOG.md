@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.3](https://github.com/ljiulong/boxyy/compare/v0.5.2...v0.5.3) (2026-01-07)
+
+
+### Bug Fixes
+
+* update createUpdaterArtifacts option in tauri config for version compatibility ([3ed5695](https://github.com/ljiulong/boxyy/commit/3ed56957478e9046e8a98f9fa9bfd0facc84be76))
+
 ## [0.5.2](https://github.com/ljiulong/boxyy/compare/v0.5.1...v0.5.2) (2026-01-07)
 
 
