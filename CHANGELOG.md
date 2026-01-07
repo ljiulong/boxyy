@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/ljiulong/boxyy/compare/v0.4.4...v0.5.0) (2026-01-07)
+
+
+### Features
+
+* add updater option to Tauri build command for enhanced application updates ([8439f07](https://github.com/ljiulong/boxyy/commit/8439f07eadff08b4b6d0006b03360fb82dd894fe))
+
 ## [0.4.4](https://github.com/ljiulong/boxyy/compare/v0.4.3...v0.4.4) (2026-01-07)
 
 
