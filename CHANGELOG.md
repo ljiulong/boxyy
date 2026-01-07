@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.4](https://github.com/ljiulong/boxyy/compare/v0.4.3...v0.4.4) (2026-01-07)
+
+
+### Bug Fixes
+
+* update dependencies in Cargo.lock and add tracing workspace in boxy-gui ([8ba31d2](https://github.com/ljiulong/boxyy/commit/8ba31d2988e190d14350329bd5b38a990e367114))
+
 ## [0.4.3](https://github.com/ljiulong/boxyy/compare/v0.4.2...v0.4.3) (2026-01-07)
 
 
