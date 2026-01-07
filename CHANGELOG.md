@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/ljiulong/boxyy/compare/v0.4.0...v0.4.1) (2026-01-07)
+
+
+### Bug Fixes
+
+* some bug ([2df3648](https://github.com/ljiulong/boxyy/commit/2df364836c25357a980e6e9a779c0626ee9af9f0))
+
 ## [0.4.0](https://github.com/ljiulong/boxyy/compare/v0.3.5...v0.4.0) (2026-01-07)
 
 
