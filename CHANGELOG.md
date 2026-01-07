@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.2](https://github.com/ljiulong/boxyy/compare/v0.6.1...v0.6.2) (2026-01-07)
+
+
+### Bug Fixes
+
+* update Cargo.lock and add tauri-plugin-process; enhance permission schemas for process management ([ee27360](https://github.com/ljiulong/boxyy/commit/ee2736069aabb61785837815ce22b21a7697602c))
+
 ## [0.6.1](https://github.com/ljiulong/boxyy/compare/v0.6.0...v0.6.1) (2026-01-07)
 
 
