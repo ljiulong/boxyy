@@ -58,6 +58,14 @@ body {
   right: 0;
   height: var(--titlebar-height);
   z-index: 1000;
+  -webkit-app-region: drag;
+}
+
+/* 拖拽区域内的交互元素不可拖拽 */
+.titlebar-drag-region button,
+.titlebar-drag-region input,
+.titlebar-drag-region a {
+  -webkit-app-region: no-drag;
 }
 
 /* 左侧侧边栏 */

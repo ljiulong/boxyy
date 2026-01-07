@@ -341,6 +341,10 @@ impl PackageManager for BrewManager {
             }
         }
 
+        // 去重：按包名去重，保留第一个出现的
+        let mut seen = std::collections::HashSet::new();
+        packages.retain(|pkg| seen.insert(pkg.name.clone()));
+
         match self.fetch_installed_sizes().await {
             Ok(size_map) => {
                 for pkg in packages.iter_mut() {

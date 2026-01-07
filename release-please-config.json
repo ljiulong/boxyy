@@ -4,9 +4,21 @@
   "packages": {
     ".": {
       "extra-files": [
-        "boxy-gui/tauri.conf.json",
-        "gui-frontend/package.json",
-        "Cargo.toml"
+        {
+          "type": "json",
+          "path": "boxy-gui/tauri.conf.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "gui-frontend/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "Cargo.toml",
+          "key": "workspace.package.version"
+        }
       ]
     }
   }

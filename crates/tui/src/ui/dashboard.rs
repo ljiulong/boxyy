@@ -297,8 +297,22 @@ fn draw_package_detail(f: &mut Frame, app: &mut App, area: Rect) {
       Span::styled("[Ctrl+C] ", Style::default().fg(Color::Gray)),
       Span::styled("退出应用 / Quit", Style::default().fg(Color::DarkGray)),
     ]));
+
+    // 版本号显示
+    lines.push(Line::from(""));
+    lines.push(Line::from(vec![Span::styled(
+      format!("Boxy v{}", env!("CARGO_PKG_VERSION")),
+      Style::default().fg(Color::DarkGray),
+    )]));
   } else {
     lines.push(Line::from("No package selected"));
+
+    // 版本号显示
+    lines.push(Line::from(""));
+    lines.push(Line::from(vec![Span::styled(
+      format!("Boxy v{}", env!("CARGO_PKG_VERSION")),
+      Style::default().fg(Color::DarkGray),
+    )]));
   }
 
   let paragraph = Paragraph::new(Text::from(lines))
