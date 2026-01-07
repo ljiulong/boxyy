@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.6](https://github.com/ljiulong/boxyy/compare/v0.5.5...v0.5.6) (2026-01-07)
+
+
+### Bug Fixes
+
+* update release workflow to include tag name from release-please and adjust GUI title bar style ([89588c3](https://github.com/ljiulong/boxyy/commit/89588c33f4924e143c79d854d4b003990ae005fd))
+
 ## [0.5.5](https://github.com/ljiulong/boxyy/compare/v0.5.4...v0.5.5) (2026-01-07)
 
 
