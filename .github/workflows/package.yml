@@ -8,7 +8,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  gui-macos:
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -78,29 +78,72 @@ jobs:
           fi
           cp "${DMG_PATH}" "${DIST_DIR}/Boxy-${VERSION_TAG}-macos.dmg"
 
-      - name: Upload bundle
+      - name: Upload GUI artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: boxy-macos
+          name: gui-macos
           path: dist
 
-      - name: Publish release assets
-        if: github.event_name == 'push'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ env.TAG_NAME }}
-          name: ${{ env.TAG_NAME }}
-          generate_release_notes: false
-          files: |
-            dist/Boxy-${{ env.TAG_NAME }}-macos.app.zip
-            dist/Boxy-${{ env.TAG_NAME }}-macos.dmg
-
-  verify-download:
-    runs-on: macos-latest
-    needs: build
+  cli-tui:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Resolve version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(python -c 'import json; print(json.load(open("boxy-gui/tauri.conf.json", "r", encoding="utf-8")).get("version", "0.0.0"))')"
+          echo "TAG_NAME=v${VERSION}" >> "${GITHUB_ENV}"
+
+      - name: Build CLI/TUI
+        run: cargo build --release -p boxy-cli -p boxy-tui
+
+      - name: Package CLI/TUI
+        shell: bash
+        run: |
+          set -euo pipefail
+          DIST_DIR="dist"
+          mkdir -p "${DIST_DIR}"
+          ARCHIVE_PREFIX="boxy-cli-tui-${TAG_NAME}-${{ runner.os }}"
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            cp target/release/boxy.exe "${DIST_DIR}/boxy-cli-${{ runner.os }}.exe"
+            cp target/release/boxy-tui.exe "${DIST_DIR}/boxy-tui-${{ runner.os }}.exe"
+            (cd "${DIST_DIR}" && 7z a "${ARCHIVE_PREFIX}.zip" "boxy-cli-${{ runner.os }}.exe" "boxy-tui-${{ runner.os }}.exe")
+          else
+            cp target/release/boxy "${DIST_DIR}/boxy-cli-${{ runner.os }}"
+            cp target/release/boxy-tui "${DIST_DIR}/boxy-tui-${{ runner.os }}"
+            chmod +x "${DIST_DIR}/boxy-cli-${{ runner.os }}" "${DIST_DIR}/boxy-tui-${{ runner.os }}"
+            tar -czf "${DIST_DIR}/${ARCHIVE_PREFIX}.tar.gz" -C "${DIST_DIR}" "boxy-cli-${{ runner.os }}" "boxy-tui-${{ runner.os }}"
+          fi
+
+      - name: Upload CLI/TUI artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-tui-${{ runner.os }}
+          path: dist
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [gui-macos, cli-tui]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(python -c 'import json; print(json.load(open("boxy-gui/tauri.conf.json", "r", encoding="utf-8")).get("version", "0.0.0"))')"
+          echo "TAG_NAME=v${VERSION}" >> "${GITHUB_ENV}"
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -112,3 +155,16 @@ jobs:
         run: |
           chmod +x scripts/ci/verify-artifacts.sh
           ./scripts/ci/verify-artifacts.sh dist
+
+      - name: Publish release assets
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          name: ${{ env.TAG_NAME }}
+          generate_release_notes: true
+          files: |
+            dist/**/Boxy-${{ env.TAG_NAME }}-macos.app.zip
+            dist/**/Boxy-${{ env.TAG_NAME }}-macos.dmg
+            dist/**/boxy-cli-tui-${{ env.TAG_NAME }}-*.tar.gz
+            dist/**/boxy-cli-tui-${{ env.TAG_NAME }}-*.zip

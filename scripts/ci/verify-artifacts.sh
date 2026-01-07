@@ -25,7 +25,7 @@ for artifact_dir in "${ARTIFACT_ROOT}"/*; do
     primary_found=1
   fi
 
-  for pattern in "*.dmg" "*.msi" "*.exe" "*.AppImage" "*.deb" "*.rpm"; do
+  for pattern in "*.dmg" "*.app.zip" "*.msi" "*.exe" "*.AppImage" "*.deb" "*.rpm"; do
     if find "${artifact_dir}" -type f -name "${pattern}" -print -quit | grep -q .; then
       primary_found=1
     fi
