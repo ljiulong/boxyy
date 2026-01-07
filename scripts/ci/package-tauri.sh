@@ -12,4 +12,6 @@ fi
 
 cd "${FRONTEND_DIR}"
 pnpm install --frozen-lockfile
-pnpm tauri:build
+pnpm build
+cd "${ROOT_DIR}/boxy-gui"
+tauri build --bundles app,dmg
