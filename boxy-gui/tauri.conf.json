@@ -12,8 +12,7 @@
         "title": "Boxy",
         "width": 1320,
         "height": 860,
-        "resizable": true,
-        "titleBarStyle": "transparent"
+        "resizable": true
       }
     ],
     "security": {
@@ -35,13 +34,15 @@
       ]
     }
   },
-  "updater": {
-    "active": true,
-    "endpoints": [
-      "https://github.com/ljiulong/boxyy/releases/latest/download/latest.json"
-    ],
-    "dialog": false,
-    "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEE0OTJDRDE3QjNCQUJCNTcKUldSWHU3cXpGODJTcERMbFRqMGY1V3ZudTFlNmZWRUxVOXpwTENncE5MRUVwa29XVlJtRmJVWE8K"
+  "plugins": {
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://github.com/ljiulong/boxyy/releases/latest/download/latest.json"
+      ],
+      "dialog": false,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEE0OTJDRDE3QjNCQUJCNTcKUldSWHU3cXpGODJTcERMbFRqMGY1V3ZudTFlNmZWRUxVOXpwTENncE5MRUVwa29XVlJtRmJVWE8K"
+    }
   },
   "bundle": {
     "icon": [
