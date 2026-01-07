@@ -44,15 +44,17 @@ jobs:
           mkdir -p "${DIST_DIR}"
           VERSION="$(python -c 'import json; print(json.load(open("boxy-gui/tauri.conf.json", "r", encoding="utf-8")).get("version", "0.0.0"))')"
           VERSION_TAG="v${VERSION}"
-          APP_PATH="$(find target/release/bundle/macos -maxdepth 1 -type d -name '*.app' | head -n 1)"
+          APP_PATH="$(find target/release/bundle -type d -name '*.app' | head -n 1)"
           if [[ -z "${APP_PATH}" ]]; then
-            echo "No .app bundle found in target/release/bundle/macos" >&2
+            echo "No .app bundle found under target/release/bundle" >&2
+            find target/release/bundle -maxdepth 3 -type d -print || true
             exit 1
           fi
           ditto -c -k --sequesterRsrc --keepParent "${APP_PATH}" "${DIST_DIR}/Boxy-${VERSION_TAG}-macos.app.zip"
-          DMG_PATH="$(find target/release/bundle/dmg -maxdepth 1 -type f -name '*.dmg' | head -n 1)"
+          DMG_PATH="$(find target/release/bundle -type f -name '*.dmg' | head -n 1)"
           if [[ -z "${DMG_PATH}" ]]; then
-            echo "No .dmg found in target/release/bundle/dmg" >&2
+            echo "No .dmg found under target/release/bundle" >&2
+            find target/release/bundle -maxdepth 3 -type f -print || true
             exit 1
           fi
           cp "${DMG_PATH}" "${DIST_DIR}/Boxy-${VERSION_TAG}-macos.dmg"
