@@ -271,6 +271,6 @@ macOS GUI 安装提示：
 
 
 ## 开源许可证
-MIT License，详见 `LICENSE`。
+MIT 
 
 # 请注意：Boxy不是包管理器，只是包管理器的统一入口。
