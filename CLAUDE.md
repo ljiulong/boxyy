@@ -170,16 +170,67 @@ Some managers (npm, pnpm, yarn, bun) support:
 
 ### Adding a New Package Manager
 
+**IMPORTANT**: Follow ALL steps to avoid missing dependencies!
+
 1. **Create manager crate**: `crates/managers/<manager_name>/`
+   - Create `Cargo.toml` with necessary dependencies
+   - Create `src/lib.rs` with manager implementation
+   - **Use Chinese comments throughout the code**
+
 2. **Implement PackageManager trait**: Follow patterns in `crates/managers/npm/src/lib.rs`
+   - All comments must be in Chinese (中文注释)
+   - Example: `// 执行 npm 命令` instead of `// Execute npm command`
+
 3. **Add to workspace**: Update root `Cargo.toml` members list
+   ```toml
+   members = [
+       # ... existing members
+       "crates/managers/<manager_name>",
+   ]
+   ```
+
 4. **Register in CLI**: Update `crates/cli/src/managers.rs`:
    - Add to `MANAGER_NAMES` array
    - Add case in `create_manager()` function
    - If supports global/local scope, update `supports_global()`
+   - Add dependency in `crates/cli/Cargo.toml` if needed
+
 5. **Register in TUI**: Update `crates/tui/src/managers.rs` similarly
-6. **Register in GUI**: Update `boxy-gui/Cargo.toml` dependencies and `boxy-gui/src/lib.rs`
-7. **Add tests**: Create `tests/` directory in manager crate
+   - Update `crates/tui/Cargo.toml` if needed
+
+6. **Register in GUI**: **CRITICAL - Do not forget!**
+   - Add dependency in `boxy-gui/Cargo.toml`:
+     ```toml
+     boxy-<manager_name> = { path = "../crates/managers/<manager_name>" }
+     ```
+   - Update `boxy-gui/src/lib.rs` to include the manager
+   - Import the manager: `use boxy_<manager_name>::<ManagerName>Manager;`
+   - Add to manager creation logic
+
+7. **Verify dependencies are complete**:
+   ```bash
+   cargo check --workspace              # Must pass
+   cargo build -p boxy-gui              # Must include new manager
+   cargo build -p boxy-cli              # Must include new manager
+   cargo build -p boxy-tui              # Must include new manager
+   ```
+
+8. **Update lock file**:
+   ```bash
+   cargo update -p boxy-<manager_name>  # Update Cargo.lock
+   ```
+
+9. **Add tests**: Create `tests/` directory in manager crate
+
+10. **Double-check checklist**:
+    - ✅ Manager crate created with Cargo.toml
+    - ✅ Added to workspace members
+    - ✅ Registered in CLI (managers.rs + Cargo.toml)
+    - ✅ Registered in TUI (managers.rs + Cargo.toml)
+    - ✅ Registered in GUI (Cargo.toml + lib.rs)
+    - ✅ All comments are in Chinese
+    - ✅ Cargo.lock updated
+    - ✅ Build passes for all binaries
 
 ### Building the Project
 
@@ -289,11 +340,15 @@ git commit -m "feat!: change PackageManager trait interface"
 4. **Cache appropriately**: Use `cache.set()` after fetching, `cache.invalidate()` after mutations
 5. **Error handling**: Return `Result<T>` using `BoxyError` variants
 6. **Logging**: Use `tracing` macros (`debug!`, `info!`, `warn!`, `error!`)
+7. **Comments in Chinese**: All code comments, documentation, and inline notes must be written in Chinese
 
 ### Code Style
 
 - **Rust**: Follow `rustfmt` defaults (run `cargo fmt`)
-- **Comments**: Chinese comments are used throughout (match existing style)
+- **Comments**: **ALL code comments MUST be in Chinese** (所有注释必须使用中文)
+  - Function comments, inline comments, documentation comments - all in Chinese
+  - Match the existing codebase style (see examples in `crates/managers/npm/src/lib.rs`)
+  - Example: `// 使用缓存的 npm 包列表` instead of `// Use cached npm package list`
 - **Naming**: Snake_case for functions/variables, PascalCase for types
 - **Testing**: Add unit tests in manager crates, integration tests in CLI/TUI
 
@@ -394,13 +449,59 @@ use std::env;
 
 ## Common Tasks for AI Assistants
 
+### Dependency Management
+
+**CRITICAL**: When making changes involving dependencies, you MUST:
+
+1. **Check lock files** before and after changes:
+   - Rust: `Cargo.lock` (workspace root)
+   - Frontend: `gui-frontend/pnpm-lock.yaml`
+   - Ensure lock files are updated consistently with manifest changes
+
+2. **Verify all dependency declarations**:
+   - `Cargo.toml` (workspace dependencies)
+   - `crates/*/Cargo.toml` (crate-specific dependencies)
+   - `gui-frontend/package.json` (npm dependencies)
+   - `boxy-gui/Cargo.toml` (Tauri dependencies)
+
+3. **Common dependency locations**:
+   ```
+   Cargo.toml                    # Workspace-level deps (shared versions)
+   crates/cli/Cargo.toml         # CLI-specific deps
+   crates/tui/Cargo.toml         # TUI-specific deps
+   boxy-gui/Cargo.toml           # GUI backend deps (includes manager crates)
+   gui-frontend/package.json     # GUI frontend deps
+   ```
+
+4. **Adding a new manager requires**:
+   - Adding to workspace members in root `Cargo.toml`
+   - Adding dependency in `boxy-gui/Cargo.toml` (for GUI support)
+   - Example:
+     ```toml
+     # In boxy-gui/Cargo.toml
+     boxy-newmanager = { path = "../crates/managers/newmanager" }
+     ```
+
+5. **Test after dependency changes**:
+   ```bash
+   cargo check --workspace        # Verify all Rust deps resolve
+   cd gui-frontend && pnpm install  # Update frontend lock file
+   cargo build --workspace        # Ensure everything compiles
+   ```
+
+6. **Never leave dependencies half-configured**:
+   - If you add a crate, register it everywhere it's needed
+   - If you remove a crate, clean up all references
+   - Check both code imports AND manifest files
+
 ### Bug Fixes
 
 1. Reproduce the issue locally
 2. Check error logs (use `--verbose` flag)
 3. Fix the bug in the appropriate crate
 4. Add regression test if possible
-5. Commit with `fix:` prefix
+5. **Verify no dependency issues** if the fix involves imports
+6. Commit with `fix:` prefix
 
 ### Feature Additions
 
@@ -409,8 +510,13 @@ use std::env;
 3. Implement in CLI (`crates/cli/`)
 4. Implement in TUI (`crates/tui/`) - UI changes needed
 5. Implement in GUI (backend + frontend)
-6. Update documentation (README.md if user-facing)
-7. Commit with `feat:` prefix
+6. **Check and update dependencies**:
+   - Add new crates to workspace members if needed
+   - Register in `boxy-gui/Cargo.toml` for GUI support
+   - Update lock files (`Cargo.lock`, `pnpm-lock.yaml`)
+7. Update documentation (README.md if user-facing)
+8. **Write all comments in Chinese**
+9. Commit with `feat:` prefix
 
 ### Documentation Updates
 
