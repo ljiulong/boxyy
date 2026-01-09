@@ -64,6 +64,9 @@ Boxy 是一套统一管理多种包管理器的工具集，提供 CLI、TUI 和 
 # 卸载
 ./boxy uninstall ripgrep --manager brew
 
+# 卸载并清理包管理器缓存（确保彻底清除）
+./boxy uninstall ripgrep --manager brew --clean-cache
+
 # 列出可更新包
 ./boxy outdated --manager brew
 ```
@@ -139,6 +142,30 @@ brew install --cask boxy-gui
 4. 解压后运行即可。
 
 ## 常见问题
+
+### 卸载后重新安装还是旧版本？
+
+包管理器通常会缓存下载的文件，卸载时不会自动清理这些缓存。如果你遇到"卸载后重新安装，但版本号还是旧的"的问题，可以使用 `--clean-cache` 选项：
+
+```bash
+# 使用 boxy 卸载并清理缓存（推荐）
+boxy uninstall <包名> --manager brew --clean-cache
+
+# 或者手动清理（适用于非 boxy 安装的情况）
+brew uninstall <包名>
+brew cleanup -s
+brew install <包名>
+```
+
+支持缓存清理的包管理器：
+- ✅ **brew**：`brew cleanup --prune=all`
+- ✅ **npm**：`npm cache clean --force`
+- ✅ **pnpm**：`pnpm store prune`
+- ✅ **yarn**：`yarn cache clean`
+- ✅ **bun**：自动删除 `~/.bun/install/cache`
+- ✅ **pip**：`pip cache purge`
+- ✅ **uv**：`uv cache clean`
+- ⚠️ **cargo、pipx、mas**：不支持自动清理
 
 ### 扫描结果不完整
 Boxy 仍在完善阶段，可能出现扫描不全或识别不完整的情况。欢迎提交反馈：<https://github.com/ljiulong/boxyy/issues>
