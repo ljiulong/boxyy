@@ -471,6 +471,15 @@ impl PackageManager for BrewManager {
         Ok(self.parse_outdated_output(&output))
     }
 
+    /// 清理 Homebrew 下载缓存
+    ///
+    /// 执行 `brew cleanup --prune=all` 清理所有下载缓存
+    async fn clean_cache(&self) -> Result<()> {
+        info!("brew cleanup --prune=all");
+        self.exec(&["cleanup", "--prune=all"]).await?;
+        Ok(())
+    }
+
     fn capabilities(&self) -> &[Capability] {
         use Capability::*;
 

@@ -490,6 +490,15 @@ impl PackageManager for NpmManager {
         Ok(packages)
     }
 
+    /// 清理 npm 缓存
+    ///
+    /// 执行 `npm cache clean --force` 清理所有下载缓存
+    async fn clean_cache(&self) -> Result<()> {
+        info!("npm cache clean --force");
+        self.exec(&["cache", "clean", "--force"]).await?;
+        Ok(())
+    }
+
     fn capabilities(&self) -> &[Capability] {
         use Capability::*;
 

@@ -421,6 +421,15 @@ impl PackageManager for YarnManager {
         Ok(packages)
     }
 
+    /// 清理 yarn 缓存
+    ///
+    /// 执行 `yarn cache clean` 清理所有下载缓存
+    async fn clean_cache(&self) -> Result<()> {
+        info!("yarn cache clean");
+        self.exec(&["cache", "clean"]).await?;
+        Ok(())
+    }
+
     fn capabilities(&self) -> &[Capability] {
         use Capability::*;
 

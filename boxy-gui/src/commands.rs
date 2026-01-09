@@ -498,7 +498,13 @@ async fn spawn_task(
         match operation {
           Operation::Install => mgr.install(&package, version.as_deref(), force).await,
           Operation::Update => mgr.upgrade(&package).await,
-          Operation::Uninstall => mgr.uninstall(&package, force).await,
+          Operation::Uninstall => {
+            // 执行卸载
+            mgr.uninstall(&package, force).await?;
+            // 自动清理缓存（忽略错误，不中断卸载）
+            let _ = mgr.clean_cache().await;
+            Ok(())
+          },
         }
       } else {
         Err(boxy_error::BoxyError::ManagerNotFound {

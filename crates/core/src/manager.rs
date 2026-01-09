@@ -29,6 +29,17 @@ pub trait PackageManager: Send + Sync {
         })
     }
 
+    /// 清理包管理器的下载缓存
+    ///
+    /// 默认实现返回不支持的操作错误。
+    /// 支持缓存清理的包管理器应该重写此方法。
+    async fn clean_cache(&self) -> Result<()> {
+        Err(BoxyError::UnsupportedOperation {
+            manager: self.name().to_string(),
+            operation: "clean_cache".to_string(),
+        })
+    }
+
     fn capabilities(&self) -> &[Capability];
 
     fn cache_key(&self) -> &str {

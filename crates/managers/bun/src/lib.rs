@@ -433,6 +433,36 @@ impl PackageManager for BunManager {
         Ok(outdated)
     }
 
+    /// 清理 bun 缓存
+    ///
+    /// 由于官方命令 `bun pm cache rm` 存在已知问题，
+    /// 此方法手动删除 ~/.bun/install/cache 目录
+    async fn clean_cache(&self) -> Result<()> {
+        info!("清理 bun 缓存目录");
+
+        // 获取用户主目录
+        let home_dir = dirs::home_dir().ok_or_else(|| BoxyError::CommandFailed {
+            manager: "bun".to_string(),
+            command: "clean_cache".to_string(),
+            exit_code: -1,
+        })?;
+
+        let cache_dir = home_dir.join(".bun/install/cache");
+
+        if cache_dir.exists() {
+            tokio::fs::remove_dir_all(&cache_dir).await.map_err(|e| {
+                BoxyError::CommandFailed {
+                    manager: "bun".to_string(),
+                    command: format!("删除缓存目录失败: {}", e),
+                    exit_code: -1,
+                }
+            })?;
+            info!("已删除 bun 缓存目录: {:?}", cache_dir);
+        }
+
+        Ok(())
+    }
+
     fn capabilities(&self) -> &[Capability] {
         use Capability::*;
 
