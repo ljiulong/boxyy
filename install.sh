@@ -30,11 +30,28 @@ detect_os() {
 
 # 检测架构
 detect_arch() {
-    case "$(uname -m)" in
-        x86_64|amd64)   ARCH="x86_64";;
-        aarch64|arm64)  ARCH="aarch64";;
-        armv7l)         ARCH="armv7";;
-        *)              error "不支持的架构: $(uname -m)";;
+    local machine_arch="$(uname -m)"
+
+    case "$machine_arch" in
+        x86_64|amd64)
+            ARCH="x86_64"
+            ;;
+        aarch64|arm64|armv7l|armv6l)
+            error "当前不支持 $machine_arch 架构。
+目前仅提供 x86_64/amd64 架构的预编译二进制文件。
+
+如需其他架构支持，请：
+  1. 访问 https://github.com/ljiulong/boxyy/issues 提交需求
+  2. 或从源码编译: cargo build --release -p boxy-cli -p boxy-tui
+
+支持的架构：x86_64, amd64"
+            ;;
+        *)
+            error "不支持的架构: $machine_arch
+
+当前仅支持 x86_64/amd64 架构。
+请访问 https://github.com/ljiulong/boxyy/issues 反馈您的需求。"
+            ;;
     esac
 }
 
