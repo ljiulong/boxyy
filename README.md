@@ -143,12 +143,10 @@ JSON 输出：
 双击安装后的桌面应用即可使用。
 
 ## 下载指南
-macOS 推荐下载方式：Homebrew（避免系统拦截，安装后可直接使用）
- 
-说明：
-- Homebrew 仅适用于 macOS；Linux/Windows 请使用 GitHub Releases 下载对应包。
-- Boxy 只会检测“通过包管理器安装/管理”的应用、包与依赖；手动下载或拖拽安装的应用不会被识别。
-- 当前仍在完善阶段，可能出现扫描不全或识别不完整的情况。
+
+### 🚀 快速安装（推荐）
+
+#### macOS 用户（推荐使用 Homebrew）
 
 ```bash
 # 订阅本仓库的 tap
@@ -160,6 +158,46 @@ brew install boxy
 # 安装 GUI（macOS）
 brew install --cask boxy-gui
 ```
+
+#### Linux 用户（一键安装）
+
+```bash
+# 使用 curl（推荐）
+curl -fsSL https://raw.githubusercontent.com/ljiulong/boxyy/main/install.sh | bash
+
+# 或使用 wget
+wget -qO- https://raw.githubusercontent.com/ljiulong/boxyy/main/install.sh | bash
+```
+
+安装完成后，请重新加载 shell 配置或重启终端：
+
+```bash
+source ~/.bashrc   # 如果使用 bash
+source ~/.zshrc    # 如果使用 zsh
+```
+
+**高级用法：**
+
+```bash
+# 指定安装版本
+export BOXY_VERSION=v1.0.0
+curl -fsSL https://raw.githubusercontent.com/ljiulong/boxyy/main/install.sh | bash
+
+# 指定安装目录（默认为 ~/.local/bin）
+export BOXY_INSTALL_DIR=/usr/local/bin
+curl -fsSL https://raw.githubusercontent.com/ljiulong/boxyy/main/install.sh | bash
+
+# 跳过 PATH 配置（自行配置）
+export BOXY_SKIP_PATH_CONFIG=1
+curl -fsSL https://raw.githubusercontent.com/ljiulong/boxyy/main/install.sh | bash
+```
+
+### 📦 手动安装
+
+说明：
+- Homebrew 仅适用于 macOS；Linux/Windows 请使用上述一键安装或 GitHub Releases 手动下载。
+- Boxy 只会检测"通过包管理器安装/管理"的应用、包与依赖；手动下载或拖拽安装的应用不会被识别。
+- 当前仍在完善阶段，可能出现扫描不全或识别不完整的情况。
 
 项目在每次 push 后会自动构建并发布到 GitHub Releases 的 `nightly` 预发布版本：
 
