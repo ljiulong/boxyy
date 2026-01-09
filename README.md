@@ -4,6 +4,7 @@
 
 ## 目录
 - [项目简介](#项目简介)
+- [为什么使用 Boxy](#为什么使用-boxy)
 - [项目说明](#项目说明)
 - [平台支持细节](#平台支持细节)
 - [使用指南](#使用指南)
@@ -18,6 +19,38 @@
 
 ## 项目简介
 Boxy 是一套统一管理多种包管理器的工具集，提供 CLI、TUI 和 GUI 三种使用方式。目标是用一致的命令和界面管理不同生态的包，让日常安装、更新和查询更高效。
+
+## 为什么使用 Boxy
+
+### 使用 Boxy 的优势
+
+| 场景 | 不使用 Boxy | 使用 Boxy |
+|------|------------|----------|
+| **卸载软件** | `brew uninstall <pkg>`<br>缓存残留，可能导致重装时还是旧版本 | `boxy uninstall <pkg> -m brew`<br>✅ **自动清理缓存**，确保彻底卸载 |
+| **查看所有包** | 需要记住并执行多个命令：<br>`brew list`<br>`npm list -g`<br>`pip list`<br>... | `boxy scan`<br>✅ 一键扫描所有包管理器 |
+| **统一界面** | 每个包管理器命令格式不同<br>需要记忆多套命令 | ✅ 统一的命令格式<br>✅ 可视化 TUI/GUI 界面 |
+| **并发操作** | 手动逐个执行 | ✅ 自动并行扫描和操作 |
+| **缓存管理** | 需要手动清理：<br>`brew cleanup -s`<br>`npm cache clean --force`<br>... | ✅ **默认自动清理缓存**<br>（CLI 可选 `--keep-cache` 跳过） |
+
+### 核心优势
+
+1. **🔄 智能缓存管理**
+   - TUI/GUI：卸载时**自动清理缓存**
+   - CLI：默认清理缓存，可选 `--keep-cache` 保留
+   - 避免"卸载后重装还是旧版本"的困扰
+
+2. **🎯 统一体验**
+   - 一套命令管理所有包管理器
+   - 无需记忆不同工具的参数
+
+3. **⚡ 效率提升**
+   - 并行扫描多个包管理器
+   - TUI 快速切换和操作
+
+4. **🎨 多种形态**
+   - CLI：适合脚本和自动化
+   - TUI：日常终端使用
+   - GUI：桌面可视化操作
 
 ## 项目说明
 - GUI 仅支持 macOS；CLI/TUI 为跨平台终端程序。
@@ -61,11 +94,11 @@ Boxy 是一套统一管理多种包管理器的工具集，提供 CLI、TUI 和 
 # 更新（可指定包名，不指定则更新全部）
 ./boxy update --manager brew
 
-# 卸载
+# 卸载（默认会自动清理缓存）
 ./boxy uninstall ripgrep --manager brew
 
-# 卸载并清理包管理器缓存（确保彻底清除）
-./boxy uninstall ripgrep --manager brew --clean-cache
+# 快速卸载（跳过缓存清理，速度更快）
+./boxy uninstall ripgrep --manager brew --keep-cache
 
 # 列出可更新包
 ./boxy outdated --manager brew
@@ -143,21 +176,34 @@ brew install --cask boxy-gui
 
 ## 常见问题
 
-### 卸载后重新安装还是旧版本？
+### Boxy 如何处理缓存？
 
-包管理器通常会缓存下载的文件，卸载时不会自动清理这些缓存。如果你遇到"卸载后重新安装，但版本号还是旧的"的问题，可以使用 `--clean-cache` 选项：
+**好消息：从当前版本开始，Boxy 默认自动清理缓存！**
+
+#### 各界面的缓存清理行为
+
+| 界面 | 默认行为 | 如何跳过 |
+|------|---------|---------|
+| **CLI** | ✅ 卸载时自动清理缓存 | 使用 `--keep-cache` 跳过 |
+| **TUI** | ✅ 卸载时自动清理缓存 | 无法跳过（推荐行为） |
+| **GUI** | ✅ 卸载时自动清理缓存 | 无法跳过（推荐行为） |
+
+#### 使用示例
 
 ```bash
-# 使用 boxy 卸载并清理缓存（推荐）
-boxy uninstall <包名> --manager brew --clean-cache
+# 默认：卸载并清理缓存（推荐）
+boxy uninstall <包名> --manager brew
 
-# 或者手动清理（适用于非 boxy 安装的情况）
+# 快速卸载：跳过清理缓存（仅 CLI 支持）
+boxy uninstall <包名> --manager brew --keep-cache
+
+# 手动清理（如果使用原生命令安装）
 brew uninstall <包名>
 brew cleanup -s
-brew install <包名>
 ```
 
-支持缓存清理的包管理器：
+#### 支持的包管理器
+
 - ✅ **brew**：`brew cleanup --prune=all`
 - ✅ **npm**：`npm cache clean --force`
 - ✅ **pnpm**：`pnpm store prune`
@@ -165,7 +211,13 @@ brew install <包名>
 - ✅ **bun**：自动删除 `~/.bun/install/cache`
 - ✅ **pip**：`pip cache purge`
 - ✅ **uv**：`uv cache clean`
-- ⚠️ **cargo、pipx、mas**：不支持自动清理
+- ⚠️ **cargo、pipx、mas**：不支持（静默跳过，不影响卸载）
+
+#### 为什么默认清理缓存？
+
+1. **避免版本混淆**：防止"卸载后重装还是旧版本"的问题
+2. **节省磁盘空间**：自动清理无用缓存
+3. **用户体验优先**：99% 的场景都应该清理缓存
 
 ### 扫描结果不完整
 Boxy 仍在完善阶段，可能出现扫描不全或识别不完整的情况。欢迎提交反馈：<https://github.com/ljiulong/boxyy/issues>

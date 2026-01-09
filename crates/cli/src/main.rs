@@ -114,9 +114,9 @@ enum Commands {
         /// 强制卸载
         #[arg(short, long)]
         force: bool,
-        /// 卸载后清理包管理器缓存
+        /// 跳过清理包管理器缓存（默认会清理）
         #[arg(long)]
-        clean_cache: bool,
+        keep_cache: bool,
     },
     /// 列出可更新的包
     Outdated {
@@ -233,7 +233,7 @@ async fn main() -> Result<()> {
             package,
             manager,
             force,
-            clean_cache,
+            keep_cache,
         } => {
             cmd_uninstall(
                 cache,
@@ -244,7 +244,7 @@ async fn main() -> Result<()> {
                 &package,
                 manager.as_deref(),
                 force,
-                clean_cache,
+                !keep_cache,  // 反转逻辑：默认清理，--keep-cache 跳过
                 cli.json,
             )
             .await

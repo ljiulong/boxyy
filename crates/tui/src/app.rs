@@ -819,7 +819,13 @@ impl App {
         if let Some(mgr) = manager_impl {
           match operation {
             Operation::Update => mgr.upgrade(&target).await.map(|_| ()),
-            Operation::Uninstall => mgr.uninstall(&target, force).await.map(|_| ()),
+            Operation::Uninstall => {
+              // 执行卸载
+              mgr.uninstall(&target, force).await?;
+              // 自动清理缓存（忽略错误，不中断卸载）
+              let _ = mgr.clean_cache().await;
+              Ok(())
+            },
             Operation::Install => Ok(()),
           }
         } else {
