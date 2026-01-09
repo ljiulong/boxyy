@@ -246,27 +246,59 @@ verify_installation() {
     fi
 
     if [ "$OS" = "Windows" ]; then
-        if [ -f "$INSTALL_DIR/boxy.exe" ] && [ -f "$INSTALL_DIR/boxy-tui.exe" ]; then
-            success "验证成功！"
-            return 0
+        # Windows: 检查文件存在性和可执行性
+        if [ ! -f "$INSTALL_DIR/boxy.exe" ]; then
+            error "验证失败：未找到 boxy.exe"
         fi
+        if [ ! -f "$INSTALL_DIR/boxy-tui.exe" ]; then
+            error "验证失败：未找到 boxy-tui.exe"
+        fi
+
+        # 尝试执行验证
+        if ! "$INSTALL_DIR/boxy.exe" --version &> /dev/null; then
+            error "验证失败：boxy.exe 无法执行或已损坏"
+        fi
+        if ! "$INSTALL_DIR/boxy-tui.exe" --version &> /dev/null; then
+            error "验证失败：boxy-tui.exe 无法执行或已损坏"
+        fi
+
+        success "验证成功！"
+        return 0
     else
+        # Linux/macOS: 检查文件存在性和可执行性
+        if [ ! -f "$INSTALL_DIR/boxy" ]; then
+            error "验证失败：未找到 boxy 可执行文件"
+        fi
+        if [ ! -x "$INSTALL_DIR/boxy" ]; then
+            error "验证失败：boxy 没有可执行权限"
+        fi
+        if [ ! -f "$INSTALL_DIR/boxy-tui" ]; then
+            error "验证失败：未找到 boxy-tui 可执行文件"
+        fi
+        if [ ! -x "$INSTALL_DIR/boxy-tui" ]; then
+            error "验证失败：boxy-tui 没有可执行权限"
+        fi
+
         # 临时添加到 PATH 进行验证
         export PATH="$INSTALL_DIR:$PATH"
 
-        if command -v boxy &> /dev/null && command -v boxy-tui &> /dev/null; then
-            success "验证成功！"
-            BOXY_VERSION_OUTPUT=$(boxy --version 2>&1 | head -n 1 || echo "boxy (版本未知)")
-            info "已安装: $BOXY_VERSION_OUTPUT"
-            return 0
+        # 验证 boxy 可以正常执行
+        if ! boxy --version &> /dev/null; then
+            error "验证失败：boxy 无法执行（可能是架构不兼容或二进制文件损坏）"
         fi
-    fi
 
-    warning "验证失败：boxy 命令不在 PATH 中"
-    info "请重新加载 shell 配置或重启终端"
-    echo ""
-    info "或者运行以下命令临时添加到 PATH："
-    echo "  export PATH=\"$INSTALL_DIR:\$PATH\""
+        # 验证 boxy-tui 可以正常执行
+        if ! boxy-tui --version &> /dev/null; then
+            error "验证失败：boxy-tui 无法执行（可能是架构不兼容或二进制文件损坏）"
+        fi
+
+        # 获取版本信息
+        BOXY_VERSION_OUTPUT=$(boxy --version 2>&1 | head -n 1)
+
+        success "验证成功！"
+        info "已安装: $BOXY_VERSION_OUTPUT"
+        return 0
+    fi
 }
 
 # 显示使用说明
