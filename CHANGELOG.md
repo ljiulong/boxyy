@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.4](https://github.com/ljiulong/boxyy/compare/v0.6.3...v0.6.4) (2026-01-09)
+
+
+### Bug Fixes
+
+* add window drag permission for Tauri 2.0 ([69ab9e9](https://github.com/ljiulong/boxyy/commit/69ab9e98670f691f59d249d7220203a998c0d829))
+
 ## [0.6.3](https://github.com/ljiulong/boxyy/compare/v0.6.2...v0.6.3) (2026-01-07)
 
 
