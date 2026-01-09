@@ -264,6 +264,15 @@ impl PackageManager for UvManager {
         Ok(outdated)
     }
 
+    /// 清理 uv 缓存
+    ///
+    /// 执行 `uv cache clean` 清理所有下载缓存
+    async fn clean_cache(&self) -> Result<()> {
+        info!("uv cache clean");
+        self.exec(&["cache", "clean"]).await?;
+        Ok(())
+    }
+
     fn capabilities(&self) -> &[Capability] {
         use Capability::*;
 

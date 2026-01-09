@@ -454,6 +454,15 @@ impl PackageManager for PnpmManager {
         Ok(packages)
     }
 
+    /// 清理 pnpm 缓存
+    ///
+    /// 执行 `pnpm store prune` 清理未使用的包
+    async fn clean_cache(&self) -> Result<()> {
+        info!("pnpm store prune");
+        self.exec(&["store", "prune"]).await?;
+        Ok(())
+    }
+
     fn capabilities(&self) -> &[Capability] {
         use Capability::*;
 

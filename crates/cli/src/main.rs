@@ -114,6 +114,9 @@ enum Commands {
         /// 强制卸载
         #[arg(short, long)]
         force: bool,
+        /// 卸载后清理包管理器缓存
+        #[arg(long)]
+        clean_cache: bool,
     },
     /// 列出可更新的包
     Outdated {
@@ -230,6 +233,7 @@ async fn main() -> Result<()> {
             package,
             manager,
             force,
+            clean_cache,
         } => {
             cmd_uninstall(
                 cache,
@@ -240,6 +244,7 @@ async fn main() -> Result<()> {
                 &package,
                 manager.as_deref(),
                 force,
+                clean_cache,
                 cli.json,
             )
             .await
@@ -1029,6 +1034,7 @@ async fn cmd_uninstall(
     package: &str,
     manager_name: Option<&str>,
     force: bool,
+    clean_cache: bool,
     json: bool,
 ) -> Result<()> {
     let manager_name = match manager_name {
@@ -1084,6 +1090,36 @@ async fn cmd_uninstall(
         .invalidate(&cache_key)
         .await
         .with_context(|| format!("清除 {} 缓存失败", manager.name()))?;
+
+    // 如果指定了 --clean-cache，清理包管理器缓存
+    if clean_cache {
+        if !json {
+            println!("{}", "正在清理包管理器缓存...".bright_cyan());
+        }
+        match manager.clean_cache().await {
+            Ok(_) => {
+                if !json {
+                    println!("{}", "✓ 缓存清理成功".bright_green());
+                }
+            }
+            Err(BoxyError::UnsupportedOperation { .. }) => {
+                if !json {
+                    println!(
+                        "{}",
+                        format!("⚠ {} 不支持缓存清理", manager_name).bright_yellow()
+                    );
+                }
+            }
+            Err(err) => {
+                if !json {
+                    eprintln!(
+                        "{}",
+                        format!("⚠ 缓存清理失败: {}", err).bright_yellow()
+                    );
+                }
+            }
+        }
+    }
 
     if !json {
         println!("{}", "✓ 卸载成功".bright_green());

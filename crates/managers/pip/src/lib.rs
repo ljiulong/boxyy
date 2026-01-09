@@ -277,6 +277,15 @@ impl PackageManager for PipManager {
         Ok(outdated)
     }
 
+    /// 清理 pip 缓存
+    ///
+    /// 执行 `pip cache purge` 清理所有下载缓存
+    async fn clean_cache(&self) -> Result<()> {
+        info!("pip cache purge");
+        self.exec(&["cache", "purge"]).await?;
+        Ok(())
+    }
+
     fn capabilities(&self) -> &[Capability] {
         use Capability::*;
 

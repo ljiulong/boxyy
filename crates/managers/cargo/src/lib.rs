@@ -266,6 +266,19 @@ impl PackageManager for CargoManager {
         Ok(outdated)
     }
 
+    /// 清理 cargo 缓存
+    ///
+    /// 由于 cargo 的全局缓存清理是实验性功能，
+    /// 此方法暂不实现，保持默认行为（返回不支持错误）
+    /// 用户可以手动使用 `cargo clean` 清理项目构建产物
+    // async fn clean_cache(&self) -> Result<()> {
+    //     // 未来可以实现: cargo clean gc (需要 nightly 或配置启用)
+    //     Err(BoxyError::UnsupportedOperation {
+    //         manager: self.name().to_string(),
+    //         operation: "clean_cache".to_string(),
+    //     })
+    // }
+
     fn capabilities(&self) -> &[Capability] {
         use Capability::*;
 
