@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.0](https://github.com/ljiulong/boxyy/compare/v0.6.4...v1.0.0) (2026-01-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* 卸载行为变更，现在默认自动清理缓存
+
+### Features
+
+* add --clean-cache option to uninstall command ([6e192e9](https://github.com/ljiulong/boxyy/commit/6e192e9edcc9c13b936af3bbd8e489f36cc0c828))
+* enable cache cleaning by default for all interfaces ([eac34bf](https://github.com/ljiulong/boxyy/commit/eac34bf87c796cda3d9ad9726edc951db48caf04))
+
 ## [0.6.4](https://github.com/ljiulong/boxyy/compare/v0.6.3...v0.6.4) (2026-01-09)
 
 
