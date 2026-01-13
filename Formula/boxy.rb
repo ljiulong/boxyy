@@ -1,9 +1,9 @@
 class Boxy < Formula
   desc "Unified package manager CLI and TUI"
   homepage "https://github.com/ljiulong/boxyy"
-  version "1.0.0"
+  version "1.1.0"
   url "https://github.com/ljiulong/boxyy/releases/download/v#{version}/boxy-cli-tui-v#{version}-macOS.tar.gz"
-  sha256 "e95febbf409d25a1e6b916ddfc4274536a35f9c57679d535cb42d948a0ed33d5"
+  sha256 "7720d796b5126b3339f4b660bbf301a892227acfbc92936fa8ceb1b72e0f88f3"
 
   depends_on macos: :monterey
 
