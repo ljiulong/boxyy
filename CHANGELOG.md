@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.0](https://github.com/ljiulong/boxyy/compare/v1.0.0...v1.1.0) (2026-01-13)
+
+
+### Features
+
+* add one-line installation script for Linux ([6534d6c](https://github.com/ljiulong/boxyy/commit/6534d6cba5ab8b525eddecb396974a86f2c29d17))
+* add one-line installation script for Linux ([4e52296](https://github.com/ljiulong/boxyy/commit/4e52296c0b319e1d817d3dcf9edbea0f95485424))
+
+
+### Bug Fixes
+
+* improve binary verification to detect corrupted files ([0876ebc](https://github.com/ljiulong/boxyy/commit/0876ebc6841b6ae4bcef8321bc10fa4a3ad4a4bb))
+* reject unsupported architectures explicitly ([9468609](https://github.com/ljiulong/boxyy/commit/94686097e216262a6786e0e86a28546ff5fa9248))
+
 ## [1.0.0](https://github.com/ljiulong/boxyy/compare/v0.6.4...v1.0.0) (2026-01-09)
 
 
