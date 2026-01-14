@@ -336,9 +336,15 @@ pub async fn cancel_task(
     "taskId": task_id,
     "progress": 100
   }));
+  let manager_name = store
+    .tasks
+    .iter()
+    .find(|job| job.id == task_id)
+    .map(|job| job.manager.clone());
   let _ = app.emit("task-complete", &serde_json::json!({
     "id": task_id,
-    "status": "Canceled"
+    "status": "Canceled",
+    "manager": manager_name
   }));
 
   Ok(())
@@ -580,7 +586,8 @@ async fn spawn_task(
     }));
     let _ = app.emit("task-complete", &serde_json::json!({
       "id": task_id_for_worker,
-      "status": format!("{:?}", status)
+      "status": format!("{:?}", status),
+      "manager": manager
     }));
   });
 
@@ -654,7 +661,8 @@ async fn spawn_batch_update(
           store.handles.remove(&task_id_for_worker);
           let _ = app.emit("task-complete", &serde_json::json!({
             "id": task_id_for_worker,
-            "status": "Failed"
+            "status": "Failed",
+            "manager": manager
           }));
           return;
         }
@@ -674,7 +682,8 @@ async fn spawn_batch_update(
         store.handles.remove(&task_id_for_worker);
         let _ = app.emit("task-complete", &serde_json::json!({
           "id": task_id_for_worker,
-          "status": "Failed"
+          "status": "Failed",
+          "manager": manager
         }));
         return;
       }
@@ -698,7 +707,8 @@ async fn spawn_batch_update(
       }));
       let _ = app.emit("task-complete", &serde_json::json!({
         "id": task_id_for_worker,
-        "status": "Succeeded"
+        "status": "Succeeded",
+        "manager": manager
       }));
       return;
     }
@@ -750,7 +760,8 @@ async fn spawn_batch_update(
         }));
         let _ = app.emit("task-complete", &serde_json::json!({
           "id": task_id_for_worker,
-          "status": "Failed"
+          "status": "Failed",
+          "manager": manager
         }));
         let _ = cache.invalidate(&cache_key).await;
         return;
@@ -775,7 +786,8 @@ async fn spawn_batch_update(
     }));
     let _ = app.emit("task-complete", &serde_json::json!({
       "id": task_id_for_worker,
-      "status": "Succeeded"
+      "status": "Succeeded",
+      "manager": manager
     }));
   });
 

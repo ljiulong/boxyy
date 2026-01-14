@@ -369,7 +369,14 @@ async fn cmd_scan(
                     continue;
                 }
 
-                let packages = if available && !no_cache {
+                let packages = if available {
+                    if let Err(err) = cache_clone.invalidate(m.cache_key()).await {
+                        eprintln!(
+                            "{}",
+                            format!("错误: 清除 {} 缓存失败: {}", manager_name, err)
+                                .bright_red()
+                        );
+                    }
                     match m.list_installed().await {
                         Ok(list) => list,
                         Err(err) => {
@@ -442,10 +449,16 @@ async fn cmd_scan(
             };
             println!("  {} {}", status, name.bright_white());
 
-            if available && !no_cache {
+            if available {
                 let cache_clone = cache.clone();
                 let manager = create_manager(&name, cache_clone, global, workdir.as_ref());
                 if let Some(m) = manager {
+                    if let Err(err) = cache_clone.invalidate(m.cache_key()).await {
+                        eprintln!(
+                            "{}",
+                            format!("错误: 清除 {} 缓存失败: {}", name, err).bright_red()
+                        );
+                    }
                     if let Ok(Ok(packages)) =
                         timeout(Duration::from_secs(5), m.list_installed()).await
                     {
@@ -500,19 +513,14 @@ async fn cmd_list(
                         if !available {
                             Ok((manager_name, Vec::new(), false))
                         } else {
-                            let packages = if no_cache {
-                                cache_clone
-                                    .invalidate(m.cache_key())
-                                    .await
-                                    .with_context(|| format!("清除 {} 缓存失败", manager_name))?;
-                                m.list_installed()
-                                    .await
-                                    .with_context(|| format!("获取 {} 包列表失败", manager_name))?
-                            } else {
-                                m.list_installed()
-                                    .await
-                                    .with_context(|| format!("获取 {} 包列表失败", manager_name))?
-                            };
+                            cache_clone
+                                .invalidate(m.cache_key())
+                                .await
+                                .with_context(|| format!("清除 {} 缓存失败", manager_name))?;
+                            let packages = m
+                                .list_installed()
+                                .await
+                                .with_context(|| format!("获取 {} 包列表失败", manager_name))?;
 
                             Ok((manager_name, packages, true))
                         }

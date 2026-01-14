@@ -359,9 +359,16 @@ export const App: React.FC = () => {
       }),
       listen("task-complete", (event) => {
         try {
-          const payload = event.payload as { id: string; status: string };
+          const payload = event.payload as {
+            id: string;
+            status: string;
+            manager?: string | null;
+          };
           updateTask(payload.id, { status: payload.status as Job["status"] });
           loadTasks();
+          if (payload.manager && selectedManager && payload.manager === selectedManager) {
+            loadPackages(selectedManager, packageScope, packageDirectory, true);
+          }
         } catch (error) {
           console.error("Failed to handle task-complete:", error);
         }
@@ -383,7 +390,14 @@ export const App: React.FC = () => {
         unlistenComplete();
       }
     };
-  }, [loadTasks, updateTask]);
+  }, [
+    loadTasks,
+    updateTask,
+    selectedManager,
+    loadPackages,
+    packageScope,
+    packageDirectory
+  ]);
 
   useEffect(() => {
     if (!searchQuery.trim()) {
