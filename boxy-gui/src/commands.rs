@@ -321,6 +321,13 @@ pub async fn cancel_task(
     handle.abort();
   }
 
+  // 获取任务的管理器名称
+  let manager = store
+    .tasks
+    .iter()
+    .find(|job| job.id == task_id)
+    .map(|job| job.manager.clone());
+
   if let Some(job) = store.tasks.iter_mut().find(|job| job.id == task_id) {
     job.status = JobStatus::Canceled;
     job.finished_at = Some(Utc::now());
@@ -338,7 +345,8 @@ pub async fn cancel_task(
   }));
   let _ = app.emit("task-complete", &serde_json::json!({
     "id": task_id,
-    "status": "Canceled"
+    "status": "Canceled",
+    "manager": manager
   }));
 
   Ok(())
@@ -486,6 +494,7 @@ async fn spawn_task(
   let tasks = state.tasks.clone();
   let executor = state.executor.clone();
   let task_id_for_worker = task_id.clone();
+  let manager_for_worker = manager.clone();
   let task_handle = tokio::spawn(async move {
     let manager_impl = create_manager(&manager, cache.clone(), global, workdir.clone());
     let cache_key = manager_impl
@@ -580,7 +589,8 @@ async fn spawn_task(
     }));
     let _ = app.emit("task-complete", &serde_json::json!({
       "id": task_id_for_worker,
-      "status": format!("{:?}", status)
+      "status": format!("{:?}", status),
+      "manager": manager_for_worker
     }));
   });
 
@@ -629,6 +639,7 @@ async fn spawn_batch_update(
   let tasks = state.tasks.clone();
   let executor = state.executor.clone();
   let task_id_for_worker = task_id.clone();
+  let manager_for_worker = manager.clone();
   let task_handle = tokio::spawn(async move {
     let manager_impl = create_manager(&manager, cache.clone(), global, workdir.clone());
     let cache_key = manager_impl
@@ -654,7 +665,8 @@ async fn spawn_batch_update(
           store.handles.remove(&task_id_for_worker);
           let _ = app.emit("task-complete", &serde_json::json!({
             "id": task_id_for_worker,
-            "status": "Failed"
+            "status": "Failed",
+            "manager": manager_for_worker
           }));
           return;
         }
@@ -674,7 +686,8 @@ async fn spawn_batch_update(
         store.handles.remove(&task_id_for_worker);
         let _ = app.emit("task-complete", &serde_json::json!({
           "id": task_id_for_worker,
-          "status": "Failed"
+          "status": "Failed",
+          "manager": manager_for_worker
         }));
         return;
       }
@@ -698,7 +711,8 @@ async fn spawn_batch_update(
       }));
       let _ = app.emit("task-complete", &serde_json::json!({
         "id": task_id_for_worker,
-        "status": "Succeeded"
+        "status": "Succeeded",
+        "manager": manager_for_worker
       }));
       return;
     }
@@ -750,7 +764,8 @@ async fn spawn_batch_update(
         }));
         let _ = app.emit("task-complete", &serde_json::json!({
           "id": task_id_for_worker,
-          "status": "Failed"
+          "status": "Failed",
+          "manager": manager_for_worker
         }));
         let _ = cache.invalidate(&cache_key).await;
         return;
@@ -775,7 +790,8 @@ async fn spawn_batch_update(
     }));
     let _ = app.emit("task-complete", &serde_json::json!({
       "id": task_id_for_worker,
-      "status": "Succeeded"
+      "status": "Succeeded",
+      "manager": manager_for_worker
     }));
   });
 
