@@ -351,7 +351,7 @@ async fn cmd_scan(
     directory: Option<&str>,
     available_only: bool,
     json: bool,
-    no_cache: bool,
+    _no_cache: bool,
 ) -> Result<()> {
     run_with_timeout("扫描操作超时", async {
     let scope_config = resolve_scope(None, global, scope, directory)?;
@@ -362,14 +362,21 @@ async fn cmd_scan(
         for name in MANAGER_NAMES.iter() {
             let cache_clone = cache.clone();
             let manager_name = name.to_string();
-            let manager = create_manager(&manager_name, cache_clone, global, workdir.as_ref());
+            let manager = create_manager(&manager_name, cache_clone.clone(), global, workdir.as_ref());
             if let Some(m) = manager {
                 let available = m.check_available().await.unwrap_or(false);
                 if available_only && !available {
                     continue;
                 }
 
-                let packages = if available && !no_cache {
+                let packages = if available {
+                    if let Err(err) = cache_clone.invalidate(m.cache_key()).await {
+                        eprintln!(
+                            "{}",
+                            format!("错误: 清除 {} 缓存失败: {}", manager_name, err)
+                                .bright_red()
+                        );
+                    }
                     match m.list_installed().await {
                         Ok(list) => list,
                         Err(err) => {
@@ -442,10 +449,16 @@ async fn cmd_scan(
             };
             println!("  {} {}", status, name.bright_white());
 
-            if available && !no_cache {
+            if available {
                 let cache_clone = cache.clone();
-                let manager = create_manager(&name, cache_clone, global, workdir.as_ref());
+                let manager = create_manager(&name, cache_clone.clone(), global, workdir.as_ref());
                 if let Some(m) = manager {
+                    if let Err(err) = cache_clone.invalidate(m.cache_key()).await {
+                        eprintln!(
+                            "{}",
+                            format!("错误: 清除 {} 缓存失败: {}", name, err).bright_red()
+                        );
+                    }
                     if let Ok(Ok(packages)) =
                         timeout(Duration::from_secs(5), m.list_installed()).await
                     {
@@ -468,7 +481,7 @@ async fn cmd_list(
     directory: Option<&str>,
     manager_name: Option<&str>,
     json: bool,
-    no_cache: bool,
+    _no_cache: bool,
 ) -> Result<()> {
     run_with_timeout("列表操作超时", async {
     let scope_config = resolve_scope(manager_name, global, scope, directory)?;
@@ -500,19 +513,14 @@ async fn cmd_list(
                         if !available {
                             Ok((manager_name, Vec::new(), false))
                         } else {
-                            let packages = if no_cache {
-                                cache_clone
-                                    .invalidate(m.cache_key())
-                                    .await
-                                    .with_context(|| format!("清除 {} 缓存失败", manager_name))?;
-                                m.list_installed()
-                                    .await
-                                    .with_context(|| format!("获取 {} 包列表失败", manager_name))?
-                            } else {
-                                m.list_installed()
-                                    .await
-                                    .with_context(|| format!("获取 {} 包列表失败", manager_name))?
-                            };
+                            cache_clone
+                                .invalidate(m.cache_key())
+                                .await
+                                .with_context(|| format!("清除 {} 缓存失败", manager_name))?;
+                            let packages = m
+                                .list_installed()
+                                .await
+                                .with_context(|| format!("获取 {} 包列表失败", manager_name))?;
 
                             Ok((manager_name, packages, true))
                         }

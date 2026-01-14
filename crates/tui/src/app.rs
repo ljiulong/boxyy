@@ -997,6 +997,10 @@ async fn fetch_packages(
     return Ok((Vec::new(), HashMap::new()));
   }
 
+  cache
+    .invalidate(manager.cache_key())
+    .await
+    .with_context(|| format!("清除 {} 缓存失败", manager_name))?;
   let packages = manager.list_installed().await?;
   let outdated = match timeout(Duration::from_secs(5), manager.check_outdated()).await {
     Ok(Ok(list)) => list,
