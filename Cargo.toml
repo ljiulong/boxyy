@@ -21,7 +21,7 @@ members = [
 
 [workspace.package]
 # x-release-please-start-version
-version = "1.1.0"
+version = "1.2.0"
 # x-release-please-end
 edition = "2021"
 authors = ["Boxy Team"]

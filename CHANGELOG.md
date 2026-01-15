@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.0](https://github.com/ljiulong/boxyy/compare/v1.1.0...v1.2.0) (2026-01-15)
+
+
+### Features
+
+* force fresh package lists in CLI and TUI ([16b506f](https://github.com/ljiulong/boxyy/commit/16b506f9dd402b6d6410a3012c19d4a8efa39c06))
+
+
+### Bug Fixes
+
+* add local scope guard in task-complete package refresh handler ([d88d007](https://github.com/ljiulong/boxyy/commit/d88d00788068909d24c3ccd1d89e9829421c4e46))
+* add local scope guard in task-complete package refresh handler ([a9a2f60](https://github.com/ljiulong/boxyy/commit/a9a2f603cbe2e12660792a69ee0a95ac8c3b6166))
+
 ## [1.1.0](https://github.com/ljiulong/boxyy/compare/v1.0.0...v1.1.0) (2026-01-13)
 
 
