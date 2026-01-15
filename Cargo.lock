@@ -338,7 +338,7 @@ dependencies = [
 
 [[package]]
 name = "boxy-brew"
-version = "0.6.4"
+version = "1.1.0"
 dependencies = [
  "async-trait",
  "boxy-cache",
@@ -352,7 +352,7 @@ dependencies = [
 
 [[package]]
 name = "boxy-bun"
-version = "0.6.4"
+version = "1.1.0"
 dependencies = [
  "async-trait",
  "boxy-cache",
@@ -367,7 +367,7 @@ dependencies = [
 
 [[package]]
 name = "boxy-cache"
-version = "0.6.4"
+version = "1.1.0"
 dependencies = [
  "boxy-error",
  "chrono",
@@ -381,7 +381,7 @@ dependencies = [
 
 [[package]]
 name = "boxy-cargo"
-version = "0.6.4"
+version = "1.1.0"
 dependencies = [
  "async-trait",
  "boxy-cache",
@@ -395,7 +395,7 @@ dependencies = [
 
 [[package]]
 name = "boxy-cli"
-version = "0.6.4"
+version = "1.1.0"
 dependencies = [
  "anyhow",
  "boxy-brew",
@@ -423,7 +423,7 @@ dependencies = [
 
 [[package]]
 name = "boxy-core"
-version = "0.6.4"
+version = "1.1.0"
 dependencies = [
  "async-trait",
  "boxy-cache",
@@ -437,14 +437,14 @@ dependencies = [
 
 [[package]]
 name = "boxy-error"
-version = "0.6.4"
+version = "1.1.0"
 dependencies = [
  "thiserror 1.0.69",
 ]
 
 [[package]]
 name = "boxy-gui"
-version = "0.6.4"
+version = "1.1.0"
 dependencies = [
  "anyhow",
  "boxy-brew",
@@ -478,7 +478,7 @@ dependencies = [
 
 [[package]]
 name = "boxy-mas"
-version = "0.6.4"
+version = "1.1.0"
 dependencies = [
  "async-trait",
  "boxy-cache",
@@ -492,7 +492,7 @@ dependencies = [
 
 [[package]]
 name = "boxy-npm"
-version = "0.6.4"
+version = "1.1.0"
 dependencies = [
  "async-trait",
  "boxy-cache",
@@ -506,7 +506,7 @@ dependencies = [
 
 [[package]]
 name = "boxy-pip"
-version = "0.6.4"
+version = "1.1.0"
 dependencies = [
  "async-trait",
  "boxy-cache",
@@ -520,7 +520,7 @@ dependencies = [
 
 [[package]]
 name = "boxy-pipx"
-version = "0.6.4"
+version = "1.1.0"
 dependencies = [
  "async-trait",
  "boxy-cache",
@@ -534,7 +534,7 @@ dependencies = [
 
 [[package]]
 name = "boxy-pnpm"
-version = "0.6.4"
+version = "1.1.0"
 dependencies = [
  "async-trait",
  "boxy-cache",
@@ -548,7 +548,7 @@ dependencies = [
 
 [[package]]
 name = "boxy-tui"
-version = "0.6.4"
+version = "1.1.0"
 dependencies = [
  "anyhow",
  "boxy-brew",
@@ -574,7 +574,7 @@ dependencies = [
 
 [[package]]
 name = "boxy-uv"
-version = "0.6.4"
+version = "1.1.0"
 dependencies = [
  "async-trait",
  "boxy-cache",
@@ -588,7 +588,7 @@ dependencies = [
 
 [[package]]
 name = "boxy-yarn"
-version = "0.6.4"
+version = "1.1.0"
 dependencies = [
  "async-trait",
  "boxy-cache",

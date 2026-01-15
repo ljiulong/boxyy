@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
 import { usePackageStore } from "../store/packageStore";
 
 export function usePackages(
@@ -22,21 +22,13 @@ export function usePackages(
     ) => loadPackagesRaw(target, selectedScope, selectedDirectory, force),
     [loadPackagesRaw]
   );
-  const lastScopeRef = useRef<string | null>(null);
-  const lastDirectoryRef = useRef<string | null>(null);
-
   useEffect(() => {
     const shouldLoad =
       manager &&
       (scope !== "local" || (directory && directory.trim().length > 0));
 
     if (shouldLoad && manager) {
-      const scopeChanged = lastScopeRef.current !== scope;
-      const dirChanged = lastDirectoryRef.current !== directory;
-      const force = scopeChanged || dirChanged;
-      lastScopeRef.current = scope;
-      lastDirectoryRef.current = directory;
-      loadPackages(manager, scope, directory, force);
+      loadPackages(manager, scope, directory, true);
     } else {
       clearPackages();
     }

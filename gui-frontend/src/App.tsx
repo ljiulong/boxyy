@@ -359,9 +359,22 @@ export const App: React.FC = () => {
       }),
       listen("task-complete", (event) => {
         try {
-          const payload = event.payload as { id: string; status: string };
+          const payload = event.payload as {
+            id: string;
+            status: string;
+            manager?: string | null;
+          };
           updateTask(payload.id, { status: payload.status as Job["status"] });
           loadTasks();
+          // 当任务完成且是当前选中的管理器时，刷新包列表
+          if (
+            payload.manager &&
+            selectedManager &&
+            payload.manager === selectedManager &&
+            (packageScope !== "local" || packageDirectory.trim().length > 0)
+          ) {
+            loadPackages(selectedManager, packageScope, packageDirectory, true);
+          }
         } catch (error) {
           console.error("Failed to handle task-complete:", error);
         }
@@ -383,7 +396,7 @@ export const App: React.FC = () => {
         unlistenComplete();
       }
     };
-  }, [loadTasks, updateTask]);
+  }, [loadTasks, updateTask, selectedManager, packageScope, packageDirectory, loadPackages]);
 
   useEffect(() => {
     if (!searchQuery.trim()) {
