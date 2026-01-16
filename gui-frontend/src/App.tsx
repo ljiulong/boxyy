@@ -373,7 +373,8 @@ export const App: React.FC = () => {
             payload.manager === selectedManager &&
             (packageScope !== "local" || packageDirectory.trim().length > 0)
           ) {
-            loadPackages(selectedManager, packageScope, packageDirectory, true);
+            // 任务完成后，后端已经自动清除了缓存，不需要前端强制刷新
+            loadPackages(selectedManager, packageScope, packageDirectory, false);
           }
         } catch (error) {
           console.error("Failed to handle task-complete:", error);
@@ -518,7 +519,8 @@ export const App: React.FC = () => {
         return;
       }
       if (selectedManager) {
-        await refreshManager(selectedManager, packageScope, packageDirectory);
+        // 直接通过 loadPackages 强制刷新，无需先调用 refreshManager
+        // loadPackages 的 force=true 会清除后端缓存并重新获取数据
         await loadPackages(selectedManager, packageScope, packageDirectory, true);
         showBatchMessage(`已刷新 ${selectedManager}`);
       } else {
