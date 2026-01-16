@@ -871,13 +871,13 @@ export const App: React.FC = () => {
         return;
       }
       try {
+        // removeTask 内部已经更新了前端状态，无需再次 loadTasks
         await removeTask(taskId);
-        await loadTasks();
       } catch (error) {
         console.error("Remove task failed:", error);
       }
     },
-    [removeTask, loadTasks]
+    [removeTask]
   );
 
   const onClearTasks = useCallback(async () => {

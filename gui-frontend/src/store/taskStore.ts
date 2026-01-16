@@ -61,7 +61,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     set((state) => ({ logs: { ...state.logs, [taskId]: logs } }));
   },
   cancelTask: async (taskId) => {
-    await cancelTaskApi(taskId);
+    // 乐观更新：先立即更新前端状态，提供即时反馈
     set((state) => ({
       tasks: state.tasks.map((task) =>
         task.id === taskId
@@ -76,9 +76,17 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         )
       )
     }));
+
+    // 然后异步调用后端 API
+    try {
+      await cancelTaskApi(taskId);
+    } catch (error) {
+      console.error("Failed to cancel task on backend:", error);
+      // 前端已经显示为取消状态，后端失败不影响用户体验
+    }
   },
   removeTask: async (taskId) => {
-    await deleteTaskApi(taskId);
+    // 乐观更新：先立即更新前端状态，提供即时反馈
     set((state) => {
       const nextTasks = state.tasks.filter((task) => task.id !== taskId);
       const { [taskId]: _, ...restLogs } = state.logs;
@@ -89,9 +97,18 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         currentTask: pickRunningTask(nextTasks)
       };
     });
+
+    // 然后异步调用后端 API
+    try {
+      await deleteTaskApi(taskId);
+    } catch (error) {
+      console.error("Failed to delete task from backend:", error);
+      // 后端删除失败不影响前端已经移除的状态
+      // 因为任务已经从前端移除，用户体验不受影响
+    }
   },
   clearTasks: async () => {
-    await clearTasksApi();
+    // 乐观更新：先立即更新前端状态，提供即时反馈
     set((state) => ({
       tasks: state.tasks.filter((task) => task.status === "Running"),
       logs: {},
@@ -103,6 +120,14 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       ],
       clearedAt: new Date().toISOString()
     }));
+
+    // 然后异步调用后端 API
+    try {
+      await clearTasksApi();
+    } catch (error) {
+      console.error("Failed to clear tasks on backend:", error);
+      // 前端已经清空显示，后端失败不影响用户体验
+    }
   },
   addTask: (task) =>
     set((state) => {
