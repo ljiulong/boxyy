@@ -307,6 +307,57 @@ impl App {
     });
   }
 
+  // 强制刷新：清除缓存后重新加载
+  pub fn schedule_force_refresh_packages(&mut self, handle: Arc<Mutex<App>>) {
+    self.load_packages_request_id = self.load_packages_request_id.wrapping_add(1);
+    let request_id = self.load_packages_request_id;
+    self.status_message = "强制刷新中...".to_string();
+    self.should_redraw = true;
+    tokio::spawn(async move {
+      let (manager_name, cache, global) = {
+        let app = handle.lock().await;
+        let Some(name) = app.selected_manager_name().map(|s| s.to_string()) else {
+          return;
+        };
+        (name, app.cache.clone(), app.global)
+      };
+
+      // 先清除缓存
+      if let Some(manager) = create_manager(&manager_name, cache.clone(), global) {
+        let _ = cache.invalidate(manager.cache_key()).await;
+      }
+
+      let result = fetch_packages(&manager_name, cache, global).await;
+      let mut app = handle.lock().await;
+      if app.load_packages_request_id != request_id {
+        return;
+      }
+      if app.selected_manager_name() != Some(manager_name.as_str()) {
+        return;
+      }
+      match result {
+        Ok((mut packages, outdated_map)) => {
+          for pkg in packages.iter_mut() {
+            if let Some(latest) = outdated_map.get(&pkg.name) {
+              pkg.outdated = true;
+              pkg.latest_version = latest.clone();
+            }
+          }
+          app.packages_all = packages;
+          app.apply_search_filter();
+          app.selected_package_index = 0;
+          app.status_message = format!("已刷新 {} 个包", app.packages.len());
+          app.update_manager_counts(&manager_name);
+          app.should_redraw = true;
+        }
+        Err(err) => {
+          app.status_message = format!("刷新失败: {}", err);
+          app.should_redraw = true;
+        }
+      }
+    });
+  }
+
   fn update_manager_counts(&mut self, manager_name: &str) {
     if let Some(manager) = self.managers.iter_mut().find(|m| m.name == manager_name) {
       manager.package_count = self.packages_all.len();
@@ -576,6 +627,10 @@ impl App {
         let _ = self.refresh_manager_availability().await;
         self.schedule_load_packages(handle);
       }
+      KeyCode::Char('f') => {
+        // 强制刷新当前管理器的包列表（清除缓存）
+        self.schedule_force_refresh_packages(handle);
+      }
       KeyCode::Char('g') => {
         if self.toggle_global() {
           // 切换成功，刷新所有管理器的统计数据，然后重新加载当前管理器的包列表
@@ -624,6 +679,10 @@ impl App {
       KeyCode::Char('b') | KeyCode::Esc => self.close_detail_view(),
       KeyCode::Char('r') => {
         self.schedule_load_packages(handle);
+      }
+      KeyCode::Char('f') => {
+        // 强制刷新当前管理器的包列表（清除缓存）
+        self.schedule_force_refresh_packages(handle);
       }
       KeyCode::Char('g') => {
         if self.toggle_global() {
@@ -997,10 +1056,8 @@ async fn fetch_packages(
     return Ok((Vec::new(), HashMap::new()));
   }
 
-  cache
-    .invalidate(manager.cache_key())
-    .await
-    .with_context(|| format!("清除 {} 缓存失败", manager_name))?;
+  // 不再清除缓存，直接使用 list_installed，它内部会使用缓存
+  // 如果需要强制刷新，用户可以按 'f' 键
   let packages = manager.list_installed().await?;
   let outdated = match timeout(Duration::from_secs(5), manager.check_outdated()).await {
     Ok(Ok(list)) => list,

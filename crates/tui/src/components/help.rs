@@ -53,7 +53,8 @@ pub fn render_help(f: &mut Frame, area: Rect) {
       Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
     )]),
     Line::from("  b/Esc         退回上一级 / Go back"),
-    Line::from("  r             刷新 / Refresh"),
+    Line::from("  r             刷新（使用缓存）/ Refresh (use cache)"),
+    Line::from("  f             强制刷新（清除缓存）/ Force refresh (clear cache)"),
     Line::from("  ?             切换帮助 / Toggle help"),
     Line::from("  q 或 Ctrl+C   退出应用 / Quit application"),
   ]);
