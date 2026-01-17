@@ -1,6 +1,6 @@
 cask "boxy-gui" do
-  version "1.2.0"
-  sha256 "8989b09d06741a16bea8228fe83889d67ab99c7095ef977864cdadefd3eeb367"
+  version "1.2.1"
+  sha256 "78fd2d2d316f0368ee0a14dd9268b539c5c2e67eea64996e4565bbacbe5cbec9"
 
   url "https://github.com/ljiulong/boxyy/releases/download/v#{version}/Boxy-v#{version}-macos.dmg"
   name "Boxy"
