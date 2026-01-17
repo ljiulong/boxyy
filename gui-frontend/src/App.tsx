@@ -373,8 +373,15 @@ export const App: React.FC = () => {
             payload.manager === selectedManager &&
             (packageScope !== "local" || packageDirectory.trim().length > 0)
           ) {
-            // 任务完成后，后端已经自动清除了缓存，不需要前端强制刷新
-            loadPackages(selectedManager, packageScope, packageDirectory, false);
+            // 对于取消的任务，强制刷新缓存，因为后端不会自动清除
+            // 对于成功/失败的任务，后端已清除缓存，使用普通刷新即可
+            const shouldForceRefresh = payload.status === "Canceled";
+            loadPackages(
+              selectedManager,
+              packageScope,
+              packageDirectory,
+              shouldForceRefresh
+            );
           }
         } catch (error) {
           console.error("Failed to handle task-complete:", error);
