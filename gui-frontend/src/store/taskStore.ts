@@ -86,14 +86,6 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     }
   },
   removeTask: async (taskId) => {
-    // 保存当前状态以便失败时回滚
-    const previousState = {
-      tasks: get().tasks,
-      logs: get().logs,
-      hiddenTaskIds: get().hiddenTaskIds,
-      currentTask: get().currentTask
-    };
-
     // 乐观更新：先立即更新前端状态，提供即时反馈
     set((state) => {
       const nextTasks = state.tasks.filter((task) => task.id !== taskId);
@@ -111,23 +103,19 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       await deleteTaskApi(taskId);
     } catch (error) {
       console.error("Failed to delete task from backend:", error);
-      // 后端删除失败，回滚到之前的状态
-      set({
-        tasks: previousState.tasks,
-        logs: previousState.logs,
-        hiddenTaskIds: previousState.hiddenTaskIds,
-        currentTask: previousState.currentTask
-      });
+      // 后端删除失败，从 hiddenTaskIds 中移除该任务 ID，然后重新从后端加载
+      // 这样可以避免覆盖在 API 调用期间发生的其他状态更新（如轮询或进度事件）
+      set((state) => ({
+        hiddenTaskIds: state.hiddenTaskIds.filter((id) => id !== taskId)
+      }));
+      await get().loadTasks();
     }
   },
   clearTasks: async () => {
-    // 保存当前状态以便失败时回滚
-    const previousState = {
-      tasks: get().tasks,
-      logs: get().logs,
+    // 保存过滤器状态以便失败时恢复
+    const previousFilterState = {
       hiddenTaskIds: get().hiddenTaskIds,
-      clearedAt: get().clearedAt,
-      currentTask: get().currentTask
+      clearedAt: get().clearedAt
     };
 
     // 乐观更新：先立即更新前端状态，提供即时反馈
@@ -148,14 +136,13 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       await clearTasksApi();
     } catch (error) {
       console.error("Failed to clear tasks on backend:", error);
-      // 后端清空失败，回滚到之前的状态
+      // 后端清空失败，恢复过滤器状态并重新从后端加载
+      // 这样可以避免覆盖在 API 调用期间发生的其他状态更新（如新任务启动或进度事件）
       set({
-        tasks: previousState.tasks,
-        logs: previousState.logs,
-        hiddenTaskIds: previousState.hiddenTaskIds,
-        clearedAt: previousState.clearedAt,
-        currentTask: previousState.currentTask
+        hiddenTaskIds: previousFilterState.hiddenTaskIds,
+        clearedAt: previousFilterState.clearedAt
       });
+      await get().loadTasks();
     }
   },
   addTask: (task) =>
