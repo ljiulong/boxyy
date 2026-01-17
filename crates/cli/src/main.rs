@@ -20,7 +20,7 @@ use managers::{create_manager, supports_global, MANAGER_NAMES};
 
 const COMMAND_TIMEOUT: Duration = Duration::from_secs(300);
 const READ_COMMAND_TIMEOUT: Duration = Duration::from_secs(60);
-const SCAN_CONCURRENCY: usize = 5;
+const SCAN_CONCURRENCY: usize = 10;  // 提高并发度以加速扫描
 const EXIT_ERROR: i32 = 1;
 const EXIT_USAGE: i32 = 2;
 
@@ -351,7 +351,7 @@ async fn cmd_scan(
     directory: Option<&str>,
     available_only: bool,
     json: bool,
-    _no_cache: bool,
+    no_cache: bool,
 ) -> Result<()> {
     run_with_timeout("扫描操作超时", async {
     let scope_config = resolve_scope(None, global, scope, directory)?;
@@ -370,12 +370,15 @@ async fn cmd_scan(
                 }
 
                 let packages = if available {
-                    if let Err(err) = cache_clone.invalidate(m.cache_key()).await {
-                        eprintln!(
-                            "{}",
-                            format!("错误: 清除 {} 缓存失败: {}", manager_name, err)
-                                .bright_red()
-                        );
+                    // 只有在 no_cache 为 true 时才清除缓存
+                    if no_cache {
+                        if let Err(err) = cache_clone.invalidate(m.cache_key()).await {
+                            eprintln!(
+                                "{}",
+                                format!("错误: 清除 {} 缓存失败: {}", manager_name, err)
+                                    .bright_red()
+                            );
+                        }
                     }
                     match m.list_installed().await {
                         Ok(list) => list,
@@ -453,11 +456,14 @@ async fn cmd_scan(
                 let cache_clone = cache.clone();
                 let manager = create_manager(&name, cache_clone.clone(), global, workdir.as_ref());
                 if let Some(m) = manager {
-                    if let Err(err) = cache_clone.invalidate(m.cache_key()).await {
-                        eprintln!(
-                            "{}",
-                            format!("错误: 清除 {} 缓存失败: {}", name, err).bright_red()
-                        );
+                    // 只有在 no_cache 为 true 时才清除缓存
+                    if no_cache {
+                        if let Err(err) = cache_clone.invalidate(m.cache_key()).await {
+                            eprintln!(
+                                "{}",
+                                format!("错误: 清除 {} 缓存失败: {}", name, err).bright_red()
+                            );
+                        }
                     }
                     if let Ok(Ok(packages)) =
                         timeout(Duration::from_secs(5), m.list_installed()).await
@@ -481,7 +487,7 @@ async fn cmd_list(
     directory: Option<&str>,
     manager_name: Option<&str>,
     json: bool,
-    _no_cache: bool,
+    no_cache: bool,
 ) -> Result<()> {
     run_with_timeout("列表操作超时", async {
     let scope_config = resolve_scope(manager_name, global, scope, directory)?;
@@ -513,10 +519,13 @@ async fn cmd_list(
                         if !available {
                             Ok((manager_name, Vec::new(), false))
                         } else {
-                            cache_clone
-                                .invalidate(m.cache_key())
-                                .await
-                                .with_context(|| format!("清除 {} 缓存失败", manager_name))?;
+                            // 只有在 no_cache 为 true 时才清除缓存
+                            if no_cache {
+                                cache_clone
+                                    .invalidate(m.cache_key())
+                                    .await
+                                    .with_context(|| format!("清除 {} 缓存失败", manager_name))?;
+                            }
                             let packages = m
                                 .list_installed()
                                 .await

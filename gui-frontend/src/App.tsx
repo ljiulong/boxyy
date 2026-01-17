@@ -71,7 +71,7 @@ export const App: React.FC = () => {
     setSidebarCollapsed
   } = useAppStore();
   const { t } = useI18n();
-  const { managers, refreshManager, refreshAll } = useManagers();
+  const { managers, loadManagers, refreshManager, refreshAll } = useManagers();
   const {
     selectedManager,
     selectManager,
@@ -373,7 +373,14 @@ export const App: React.FC = () => {
             payload.manager === selectedManager &&
             (packageScope !== "local" || packageDirectory.trim().length > 0)
           ) {
-            loadPackages(selectedManager, packageScope, packageDirectory, true);
+            // 任务完成后始终强制刷新，确保显示最新的包列表状态
+            // 无论任务成功、失败还是取消，都需要重新从后端获取最新数据
+            loadPackages(
+              selectedManager,
+              packageScope,
+              packageDirectory,
+              true
+            );
           }
         } catch (error) {
           console.error("Failed to handle task-complete:", error);
@@ -518,8 +525,10 @@ export const App: React.FC = () => {
         return;
       }
       if (selectedManager) {
-        await refreshManager(selectedManager, packageScope, packageDirectory);
+        // 强制刷新包列表（清除后端缓存并重新获取数据）
         await loadPackages(selectedManager, packageScope, packageDirectory, true);
+        // 更新管理器统计数据（package_count, outdated_count）
+        await loadManagers();
         showBatchMessage(`已刷新 ${selectedManager}`);
       } else {
         await refreshAll();
@@ -531,6 +540,7 @@ export const App: React.FC = () => {
     }
   }, [
     selectedManager,
+    loadManagers,
     refreshManager,
     refreshAll,
     loadPackages,
@@ -869,13 +879,13 @@ export const App: React.FC = () => {
         return;
       }
       try {
+        // removeTask 内部已经更新了前端状态，无需再次 loadTasks
         await removeTask(taskId);
-        await loadTasks();
       } catch (error) {
         console.error("Remove task failed:", error);
       }
     },
-    [removeTask, loadTasks]
+    [removeTask]
   );
 
   const onClearTasks = useCallback(async () => {

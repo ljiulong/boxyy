@@ -15,5 +15,5 @@ export function useManagers() {
     loadManagers();
   }, [loadManagers]);
 
-  return { managers, loading, error, refreshManager, refreshAll };
+  return { managers, loading, error, loadManagers, refreshManager, refreshAll };
 }

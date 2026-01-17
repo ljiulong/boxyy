@@ -61,7 +61,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     set((state) => ({ logs: { ...state.logs, [taskId]: logs } }));
   },
   cancelTask: async (taskId) => {
-    await cancelTaskApi(taskId);
+    // 乐观更新：先立即更新前端状态，提供即时反馈
     set((state) => ({
       tasks: state.tasks.map((task) =>
         task.id === taskId
@@ -76,9 +76,17 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         )
       )
     }));
+
+    // 然后异步调用后端 API
+    try {
+      await cancelTaskApi(taskId);
+    } catch (error) {
+      console.error("Failed to cancel task on backend:", error);
+      // 前端已经显示为取消状态，后端失败不影响用户体验
+    }
   },
   removeTask: async (taskId) => {
-    await deleteTaskApi(taskId);
+    // 乐观更新：先立即更新前端状态，提供即时反馈
     set((state) => {
       const nextTasks = state.tasks.filter((task) => task.id !== taskId);
       const { [taskId]: _, ...restLogs } = state.logs;
@@ -89,9 +97,28 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         currentTask: pickRunningTask(nextTasks)
       };
     });
+
+    // 然后异步调用后端 API
+    try {
+      await deleteTaskApi(taskId);
+    } catch (error) {
+      console.error("Failed to delete task from backend:", error);
+      // 后端删除失败，从 hiddenTaskIds 中移除该任务 ID，然后重新从后端加载
+      // 这样可以避免覆盖在 API 调用期间发生的其他状态更新（如轮询或进度事件）
+      set((state) => ({
+        hiddenTaskIds: state.hiddenTaskIds.filter((id) => id !== taskId)
+      }));
+      await get().loadTasks();
+    }
   },
   clearTasks: async () => {
-    await clearTasksApi();
+    // 保存过滤器状态以便失败时恢复
+    const previousFilterState = {
+      hiddenTaskIds: get().hiddenTaskIds,
+      clearedAt: get().clearedAt
+    };
+
+    // 乐观更新：先立即更新前端状态，提供即时反馈
     set((state) => ({
       tasks: state.tasks.filter((task) => task.status === "Running"),
       logs: {},
@@ -103,6 +130,20 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       ],
       clearedAt: new Date().toISOString()
     }));
+
+    // 然后异步调用后端 API
+    try {
+      await clearTasksApi();
+    } catch (error) {
+      console.error("Failed to clear tasks on backend:", error);
+      // 后端清空失败，恢复过滤器状态并重新从后端加载
+      // 这样可以避免覆盖在 API 调用期间发生的其他状态更新（如新任务启动或进度事件）
+      set({
+        hiddenTaskIds: previousFilterState.hiddenTaskIds,
+        clearedAt: previousFilterState.clearedAt
+      });
+      await get().loadTasks();
+    }
   },
   addTask: (task) =>
     set((state) => {

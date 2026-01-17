@@ -28,7 +28,9 @@ export function usePackages(
       (scope !== "local" || (directory && directory.trim().length > 0));
 
     if (shouldLoad && manager) {
-      loadPackages(manager, scope, directory, true);
+      // 默认使用缓存，不强制刷新后端
+      // 用户可以手动点击刷新按钮来强制刷新
+      loadPackages(manager, scope, directory, false);
     } else {
       clearPackages();
     }
