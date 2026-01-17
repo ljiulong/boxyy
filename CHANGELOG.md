@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.2.1](https://github.com/ljiulong/boxyy/compare/v1.2.0...v1.2.1) (2026-01-17)
+
+
+### Bug Fixes
+
+* **gui:** 任务完成后始终强制刷新包列表 ([b081ee3](https://github.com/ljiulong/boxyy/commit/b081ee324c04ae858b680b105c893b61737e6719))
+* **gui:** 修复任务删除/清空失败时的状态恢复竞态条件 ([5f94463](https://github.com/ljiulong/boxyy/commit/5f9446310d5c0d50dc4b46c767c047148cd46121))
+* **gui:** 修复删除任务无即时反馈的问题 ([fe11a08](https://github.com/ljiulong/boxyy/commit/fe11a08773a4ae952a34bbc1cafce18852ac1ab8))
+* **gui:** 修复单个管理器刷新后统计数据不更新的问题 ([5edfc99](https://github.com/ljiulong/boxyy/commit/5edfc99d2a90e6becd45aca61a89a9dc39fe54f7))
+* **gui:** 导出 loadManagers 函数以修复运行时错误 ([1d056ed](https://github.com/ljiulong/boxyy/commit/1d056eda526a134f7a439e6138b82d76079bc397))
+* **gui:** 添加任务操作失败时的状态回滚机制 ([5da5096](https://github.com/ljiulong/boxyy/commit/5da50960892c45863ee205b1190a340faf13a769))
+
+
+### Performance Improvements
+
+* **gui:** 优化 GUI 扫描性能 - 避免不必要的缓存清除 ([e9e6d46](https://github.com/ljiulong/boxyy/commit/e9e6d4681fe2a14c68d393e5fba975a4933ce633))
+* 优化扫描性能 - 提升缓存利用率和并发度 ([646ab3c](https://github.com/ljiulong/boxyy/commit/646ab3c79f618460388d7301564c661f3033fb40))
+
 ## [1.2.0](https://github.com/ljiulong/boxyy/compare/v1.1.0...v1.2.0) (2026-01-15)
 
 
