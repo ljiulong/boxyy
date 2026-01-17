@@ -71,7 +71,7 @@ export const App: React.FC = () => {
     setSidebarCollapsed
   } = useAppStore();
   const { t } = useI18n();
-  const { managers, refreshManager, refreshAll } = useManagers();
+  const { managers, loadManagers, refreshManager, refreshAll } = useManagers();
   const {
     selectedManager,
     selectManager,
@@ -526,9 +526,10 @@ export const App: React.FC = () => {
         return;
       }
       if (selectedManager) {
-        // 直接通过 loadPackages 强制刷新，无需先调用 refreshManager
-        // loadPackages 的 force=true 会清除后端缓存并重新获取数据
+        // 强制刷新包列表（清除后端缓存并重新获取数据）
         await loadPackages(selectedManager, packageScope, packageDirectory, true);
+        // 更新管理器统计数据（package_count, outdated_count）
+        await loadManagers();
         showBatchMessage(`已刷新 ${selectedManager}`);
       } else {
         await refreshAll();
@@ -540,6 +541,7 @@ export const App: React.FC = () => {
     }
   }, [
     selectedManager,
+    loadManagers,
     refreshManager,
     refreshAll,
     loadPackages,
