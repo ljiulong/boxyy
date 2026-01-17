@@ -373,14 +373,13 @@ export const App: React.FC = () => {
             payload.manager === selectedManager &&
             (packageScope !== "local" || packageDirectory.trim().length > 0)
           ) {
-            // 对于取消的任务，强制刷新缓存，因为后端不会自动清除
-            // 对于成功/失败的任务，后端已清除缓存，使用普通刷新即可
-            const shouldForceRefresh = payload.status === "Canceled";
+            // 任务完成后始终强制刷新，确保显示最新的包列表状态
+            // 无论任务成功、失败还是取消，都需要重新从后端获取最新数据
             loadPackages(
               selectedManager,
               packageScope,
               packageDirectory,
-              shouldForceRefresh
+              true
             );
           }
         } catch (error) {
