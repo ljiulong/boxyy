@@ -157,7 +157,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        # 使用 ubuntu-22.04 (glibc 2.35) 而非 ubuntu-latest (glibc 2.39)
+        # 以确保兼容 Debian 12、Ubuntu 22.04 等较旧的 Linux 发行版
+        os: [ubuntu-22.04, windows-latest, macos-latest]
     env:
       TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
     steps:
