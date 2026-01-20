@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/ljiulong/boxyy/compare/v1.2.1...v1.2.2) (2026-01-20)
+
+
+### Bug Fixes
+
+* update release-please.yml to use ubuntu-22.04 for better compatibility with older Linux distributions ([423d5d0](https://github.com/ljiulong/boxyy/commit/423d5d00b286187df2e4931357eddcbfe5c2d2f7))
+
 ## [1.2.1](https://github.com/ljiulong/boxyy/compare/v1.2.0...v1.2.1) (2026-01-17)
 
 
